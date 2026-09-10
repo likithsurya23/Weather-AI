@@ -4,14 +4,14 @@ import React, { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useApp } from '../../Hooks/useAppContext';
 import { formatTemp } from '../../lib/weatherUtils';
-import { Compass, Loader2 } from 'lucide-react';
+import { Compass, Loader2} from 'lucide-react';
 
 // Dynamic import for Globe3D from 3d-globe.jsx with SSR disabled for Three.js WebGL canvas
 const Globe3D = dynamic(() => import('../ui/3d-globe'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[560px] flex items-center justify-center bg-slate-900/60 rounded-3xl text-slate-400 text-sm">
-      <Loader2 className="w-6 h-6 animate-spin mr-2 text-blue-500" />
+    <div className="w-full h-[320px] flex items-center justify-center bg-slate-900/60 rounded-xl text-slate-400 text-xs">
+      <Loader2 className="w-5 h-5 animate-spin mr-2 text-blue-500" />
       Loading 3D Realistic Globe...
     </div>
   ),
@@ -42,7 +42,7 @@ const CITY_AVATARS = {
   'Dubai': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=100&h=100&fit=crop&crop=faces',
 };
 
-export default function WeatherGlobe({ weatherStations = [], onSelectCity }) {
+export default function WeatherGlobe({ weatherStations = [], onSelectCity, isElaborated = false }) {
   const { temperatureUnit, theme } = useApp();
   const isDark = theme === 'dark';
   const [activeStation, setActiveStation] = useState(null);
@@ -92,25 +92,29 @@ export default function WeatherGlobe({ weatherStations = [], onSelectCity }) {
   }), [isDark, activeStation]);
 
   return (
-    <div className="relative w-full rounded-3xl bg-radial from-slate-900/90 via-slate-950 to-black border border-slate-800/80 shadow-2xl p-4 sm:p-6 overflow-hidden flex flex-col items-center justify-center">
+    <div className="relative w-full max-w-full rounded-xl sm:rounded-2xl bg-radial from-slate-900/90 via-slate-950 to-black border border-slate-800/80 shadow-lg p-2 sm:p-2.5 overflow-hidden flex flex-col items-center justify-center transition-all">
       {/* Background ambient nebula glow */}
       <div className="absolute -top-32 -left-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Full-Width 3D Canvas Container */}
-      <div className="relative w-full flex flex-col items-center justify-center min-h-[560px]">
+
+
+      {/* Main 3D Canvas Container (Mobile Friendly Dimensions) */}
+      <div className={`relative w-full max-w-full overflow-hidden flex flex-col items-center justify-center transition-all duration-300 ease-in-out ${isElaborated ? 'h-[360px] sm:h-[480px] lg:h-[540px]' : 'h-[240px] sm:h-[290px] lg:h-[330px]'
+        }`}>
         {/* The 3D Globe Component */}
         <Globe3D
           markers={markers}
           config={globeConfig}
           onMarkerClick={handleMarkerClick}
-          className="h-[560px] w-full"
+          className={`w-full max-w-full overflow-hidden transition-all duration-300 ease-in-out ${isElaborated ? 'h-[360px] sm:h-[480px] lg:h-[540px]' : 'h-[240px] sm:h-[290px] lg:h-[330px]'
+            }`}
         />
 
         {/* Bottom Navigation & Interaction Hint */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 bg-slate-900/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-slate-700/50 pointer-events-none flex items-center gap-2 shadow-lg whitespace-nowrap">
-          <Compass className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-          <span>Drag to rotate • Scroll to zoom • Hover & click city avatars for live weather</span>
+        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] text-slate-400 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-slate-700/50 pointer-events-none flex items-center gap-1.5 shadow-md max-w-[90%] truncate">
+          <Compass className="w-3 h-3 text-blue-400 shrink-0" />
+          <span className="truncate">Drag to rotate • Scroll to zoom • Click city</span>
         </div>
       </div>
     </div>

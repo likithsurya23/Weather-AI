@@ -4,15 +4,15 @@ const CACHE = 60 * 1000;
 
 const IMAGES = {
   earthquake: "https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=800&q=80",
-  flood: "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=800&q=80",
+  flood: "https://images.unsplash.com/photo-1514632595-4944383f2737?w=800&q=80",
   cyclone: "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80",
   hurricane: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80",
   tsunami: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80",
-  wildfire: "https://images.unsplash.com/photo-1602980085566-48bc17882234?w=800&q=80",
+  wildfire: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80",
   landslide: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
   volcano: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80",
   tornado: "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80",
-  drought: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80",
+  drought: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80",
   storm: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&q=80"
 };
 

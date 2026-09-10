@@ -1,30 +1,31 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { api } from '../lib/api';
+import { api, getAuthToken, setAuthToken } from '../lib/api';
 import { getTranslation } from '../lib/translations';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const isLoadedRef = useRef(false);
-  const [currentCity, setCurrentCity] = useState('Bengaluru');
+
+  // Authentication State
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Location & Weather state
+  const [currentCity, setCurrentCity] = useState('');
   const [currentLocationDetails, setCurrentLocationDetails] = useState({
-    city: 'Bengaluru',
-    country: 'India',
-    region: 'Karnataka'
+    city: 'Detecting Location...',
+    country: '',
+    region: ''
   });
-  
-  // Settings & Preferences state (SSR-safe initial defaults)
-  const [user, setUser] = useState({
-    name: 'Likith D',
-    email: 'likith@example.com',
-    phone: '+91 98765 43210',
-    avatar: 'L'
-  });
-  
+
   const [defaultLocation, setDefaultLocation] = useState('Bengaluru, Karnataka');
   const [autoDetectLocation, setAutoDetectLocation] = useState(true);
+  const [isLiveLocation, setIsLiveLocation] = useState(true);
+  const [isSyncingLocation, setIsSyncingLocation] = useState(false);
+  const [deviceLocationName, setDeviceLocationName] = useState('');
 
   // Units & Formats
   const [temperatureUnit, setTemperatureUnit] = useState('celsius'); // 'celsius' or 'fahrenheit'
@@ -48,50 +49,92 @@ export function AppProvider({ children }) {
   // Language
   const [language, setLanguage] = useState('English');
 
-  // Translation helper
-  const t = useCallback((key, fallback) => {
-    return getTranslation(language, key, fallback);
-  }, [language]);
-
-  // Weather & favorites state
+  // Weather, favorites & alerts state
   const [favorites, setFavorites] = useState([]);
   const [weather, setWeather] = useState(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [alerts, setAlerts] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Load preferences from localStorage after initial hydration completes
+  // Translation helper
+  const t = useCallback(
+    (key, fallback) => {
+      return getTranslation(language, key, fallback);
+    },
+    [language]
+  );
+
+  // Initial Auth & Preferences Hydration
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let isMounted = true;
+
+    async function initAuthAndPreferences() {
       try {
-        const savedSettings = localStorage.getItem('weatherwise_settings');
-        if (savedSettings) {
-          const parsed = JSON.parse(savedSettings);
-          if (parsed.temperatureUnit) setTemperatureUnit(parsed.temperatureUnit);
-          if (parsed.windSpeedUnit) setWindSpeedUnit(parsed.windSpeedUnit);
-          if (parsed.pressureUnit) setPressureUnit(parsed.pressureUnit);
-          if (parsed.dateFormat) setDateFormat(parsed.dateFormat);
-          if (parsed.timeFormat) setTimeFormat(parsed.timeFormat);
-          if (parsed.notificationSettings) setNotificationSettings(parsed.notificationSettings);
-          if (parsed.theme) setTheme(parsed.theme);
-          if (parsed.accentColor) setAccentColor(parsed.accentColor);
-          if (parsed.language) setLanguage(parsed.language);
-          if (parsed.defaultLocation) setDefaultLocation(parsed.defaultLocation);
-          if (parsed.autoDetectLocation !== undefined) setAutoDetectLocation(parsed.autoDetectLocation);
-        }
+        const token = getAuthToken();
+        if (token) {
+          const profile = await api.getUserProfile();
+          if (isMounted && profile) {
+            setUser({
+              id: profile._id || profile.id,
+              name: profile.name,
+              email: profile.email,
+              avatar: profile.avatar || (profile.name ? profile.name.charAt(0).toUpperCase() : 'U'),
+              preferences: profile.preferences || {}
+            });
 
-        const savedUser = localStorage.getItem('weatherwise_user_profile');
-        if (savedUser) {
-          const parsedU = JSON.parse(savedUser);
-          if (parsedU.name) setUser(prev => ({ ...prev, ...parsedU }));
+            // Rehydrate user preferences from MongoDB if available
+            const prefs = profile.preferences;
+            if (prefs) {
+              if (prefs.temperatureUnit) setTemperatureUnit(prefs.temperatureUnit);
+              if (prefs.windSpeedUnit) setWindSpeedUnit(prefs.windSpeedUnit);
+              if (prefs.pressureUnit) setPressureUnit(prefs.pressureUnit);
+              if (prefs.dateFormat) setDateFormat(prefs.dateFormat);
+              if (prefs.timeFormat) setTimeFormat(prefs.timeFormat);
+              if (prefs.theme) setTheme(prefs.theme);
+              if (prefs.accentColor) setAccentColor(prefs.accentColor);
+              if (prefs.language) setLanguage(prefs.language);
+              if (prefs.defaultLocation) setDefaultLocation(prefs.defaultLocation);
+              if (prefs.autoDetectLocation !== undefined) setAutoDetectLocation(prefs.autoDetectLocation);
+            }
+
+            // Load user-specific favorites from MongoDB
+            const userFavs = await api.getFavorites();
+            if (isMounted && userFavs) {
+              setFavorites(userFavs);
+            }
+          } else if (isMounted) {
+            setUser(null);
+          }
+        } else if (isMounted) {
+          // Check local storage fallback settings for guest
+          const savedSettings = localStorage.getItem('weatherwise_settings');
+          if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            if (parsed.temperatureUnit) setTemperatureUnit(parsed.temperatureUnit);
+            if (parsed.theme) setTheme(parsed.theme);
+            if (parsed.language) setLanguage(parsed.language);
+          }
+          setUser(null);
         }
-      } catch {
-        // Ignore
+      } catch (err) {
+        console.warn('[useAppContext] Auth init error:', err);
+        if (isMounted) setUser(null);
       } finally {
-        isLoadedRef.current = true;
+        if (isMounted) {
+          setAuthLoading(false);
+          isLoadedRef.current = true;
+        }
       }
-    }, 0);
+    }
 
-    return () => clearTimeout(timer);
+    initAuthAndPreferences();
+    api.getAlerts().then((alts) => {
+      if (isMounted) setAlerts(alts || []);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Apply Theme & Accent Color to DOM
@@ -100,7 +143,7 @@ export function AppProvider({ children }) {
 
     const root = document.documentElement;
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
+
     if (isDark) {
       root.classList.add('dark');
     } else {
@@ -110,26 +153,32 @@ export function AppProvider({ children }) {
     root.style.setProperty('--primary', accentColor);
   }, [theme, accentColor]);
 
-  // Persist settings changes (only after initial load has finished)
+  // Persist settings changes locally and to backend if logged in
   useEffect(() => {
     if (!isLoadedRef.current) return;
+    const settings = {
+      temperatureUnit,
+      windSpeedUnit,
+      pressureUnit,
+      dateFormat,
+      timeFormat,
+      notificationSettings,
+      theme,
+      accentColor,
+      language,
+      defaultLocation,
+      autoDetectLocation
+    };
+
     try {
-      const settings = {
-        temperatureUnit,
-        windSpeedUnit,
-        pressureUnit,
-        dateFormat,
-        timeFormat,
-        notificationSettings,
-        theme,
-        accentColor,
-        language,
-        defaultLocation,
-        autoDetectLocation
-      };
       localStorage.setItem('weatherwise_settings', JSON.stringify(settings));
     } catch {
-      // Ignore
+      // Ignore storage errors
+    }
+
+    // If authenticated, sync preferences to MongoDB backend
+    if (user) {
+      api.updatePreferences(settings).catch(() => {});
     }
   }, [
     temperatureUnit,
@@ -142,69 +191,184 @@ export function AppProvider({ children }) {
     accentColor,
     language,
     defaultLocation,
-    autoDetectLocation
+    autoDetectLocation,
+    user
   ]);
 
-  // Load initial favorites and alerts
-  useEffect(() => {
-    api.getFavorites().then(favs => setFavorites(favs || []));
-    api.getAlerts().then(alts => setAlerts(alts || []));
-    api.getUserProfile().then(p => {
-      if (p) {
-        setUser(prev => ({
-          ...prev,
-          name: p.name || prev.name,
-          email: p.email || prev.email,
-          avatar: p.avatar || (p.name ? p.name.charAt(0).toUpperCase() : 'L')
-        }));
-      }
-    });
-  }, []);
+  // Live Device Location Sync Function
+  const syncDeviceLocation = useCallback(async (isInitial = false) => {
+    await Promise.resolve();
+    setIsSyncingLocation(true);
+    setLoadingWeather(true);
 
-  // Fetch weather data whenever currentCity changes
-  useEffect(() => {
-    let isCancelled = false;
-    api.getWeather(currentCity).then(data => {
-      if (!isCancelled && data) {
+    const applyWeather = (data) => {
+      if (data) {
         setWeather(data);
+        setCurrentCity(data.city);
         setCurrentLocationDetails({
           city: data.city,
           country: data.country,
           region: data.region || ''
         });
-        setLoadingWeather(false);
+        const locName = `${data.city}${data.region ? `, ${data.region}` : ''}`;
+        setDeviceLocationName(locName);
+        if (isInitial || autoDetectLocation) {
+          setDefaultLocation(locName);
+        }
+        setIsLiveLocation(true);
       }
-    }).catch(() => {
-      if (!isCancelled) setLoadingWeather(false);
-    });
+      setIsSyncingLocation(false);
+      setLoadingWeather(false);
+    };
+
+    const fallbackToIp = async () => {
+      try {
+        const data = await api.getWeather('auto:ip');
+        if (data) {
+          applyWeather(data);
+          return true;
+        }
+      } catch (e) {
+        console.warn('IP location detection error:', e);
+      }
+      return false;
+    };
+
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { latitude, longitude } = pos.coords;
+            const data = await api.getWeather(null, latitude, longitude);
+            if (data) {
+              applyWeather(data);
+            } else {
+              await fallbackToIp();
+            }
+          } catch {
+            await fallbackToIp();
+          }
+        },
+        async () => {
+          // GPS denied or unavailable -> use IP location seamlessly!
+          const ok = await fallbackToIp();
+          if (!ok && isInitial) {
+            const fallback = await api.getWeather('Bengaluru');
+            applyWeather(fallback);
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 6000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      await fallbackToIp();
+    }
+  }, [autoDetectLocation]);
+
+  // Initial mount: automatically sync device live location
+  useEffect(() => {
+    let isCancelled = false;
+    (async () => {
+      if (!isCancelled) {
+        await syncDeviceLocation(true);
+      }
+    })();
+    return () => {
+      isCancelled = true;
+    };
+  }, [syncDeviceLocation]);
+
+  // Fetch weather data whenever user explicitly searches or changes currentCity
+  useEffect(() => {
+    if (!currentCity || isLiveLocation) return;
+    let isCancelled = false;
+    api
+      .getWeather(currentCity)
+      .then((data) => {
+        if (!isCancelled && data) {
+          setWeather(data);
+          setCurrentLocationDetails({
+            city: data.city,
+            country: data.country,
+            region: data.region || ''
+          });
+          setLoadingWeather(false);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) setLoadingWeather(false);
+      });
 
     return () => {
       isCancelled = true;
     };
-  }, [currentCity]);
+  }, [currentCity, isLiveLocation]);
 
-  // Toggle unit between Celsius and Fahrenheit
-  const toggleTemperatureUnit = () => {
-    setTemperatureUnit(prev => prev === 'celsius' ? 'fahrenheit' : 'celsius');
+  // Auth Operations
+  const login = async (email, password) => {
+    const res = await api.login({ email, password });
+    if (res && res.user) {
+      setUser({
+        id: res.user._id || res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        avatar: res.user.avatar || res.user.name.charAt(0).toUpperCase(),
+        preferences: res.user.preferences || {}
+      });
+
+      // Reload favorites for newly logged-in user
+      const userFavs = await api.getFavorites();
+      setFavorites(userFavs || []);
+      return res.user;
+    }
+    throw new Error(res.message || 'Login failed');
+  };
+
+  const register = async (name, email, password, confirmPassword) => {
+    const res = await api.register({ name, email, password, confirmPassword });
+    if (res && res.user) {
+      setUser({
+        id: res.user._id || res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        avatar: res.user.avatar || res.user.name.charAt(0).toUpperCase(),
+        preferences: res.user.preferences || {}
+      });
+
+      const userFavs = await api.getFavorites();
+      setFavorites(userFavs || []);
+      return res.user;
+    }
+    throw new Error(res.message || 'Registration failed');
+  };
+
+  const logout = async () => {
+    await api.logout();
+    setAuthToken(null);
+    setUser(null);
+    setFavorites([]);
   };
 
   const updateUserProfile = useCallback((updated) => {
-    setUser(prev => {
-      const next = { ...prev, ...updated, avatar: (updated.name || prev.name).charAt(0).toUpperCase() };
-      try {
-        localStorage.setItem('weatherwise_user_profile', JSON.stringify(next));
-      } catch {
-        // Ignore
-      }
+    setUser((prev) => {
+      if (!prev) return null;
+      const next = {
+        ...prev,
+        ...updated,
+        avatar: (updated.name || prev.name).charAt(0).toUpperCase()
+      };
       return next;
     });
   }, []);
 
-  // Toggle favorite location
+  // Toggle favorite location in MongoDB
   const toggleFavorite = async (cityName, countryName = '', temp = 25, condition = 'Partly Cloudy') => {
-    const exists = favorites.some(f => f.city.toLowerCase() === cityName.toLowerCase());
+    const exists = favorites.some((f) => f.city.toLowerCase() === cityName.toLowerCase());
     if (exists) {
-      setFavorites(prev => prev.filter(f => f.city.toLowerCase() !== cityName.toLowerCase()));
+      setFavorites((prev) => prev.filter((f) => f.city.toLowerCase() !== cityName.toLowerCase()));
       await api.toggleFavorite(cityName);
     } else {
       const newFav = {
@@ -215,24 +379,37 @@ export function AppProvider({ children }) {
         condition,
         isFavorite: true
       };
-      setFavorites(prev => [...prev, newFav]);
+      setFavorites((prev) => [...prev, newFav]);
       await api.toggleFavorite(cityName, countryName, temp, condition);
     }
   };
 
   const isFavorite = (cityName) => {
     if (!cityName) return false;
-    return favorites.some(f => f.city.toLowerCase() === cityName.toLowerCase());
+    return favorites.some((f) => f.city.toLowerCase() === cityName.toLowerCase());
   };
 
   const selectCity = (cityName) => {
+    setIsLiveLocation(false);
     setCurrentCity(cityName);
     setLoadingWeather(true);
+  };
+
+  const toggleTemperatureUnit = () => {
+    setTemperatureUnit((prev) => (prev === 'celsius' ? 'fahrenheit' : 'celsius'));
   };
 
   return (
     <AppContext.Provider
       value={{
+        user,
+        setUser,
+        isAuthenticated: !!user,
+        authLoading,
+        login,
+        register,
+        logout,
+        updateUserProfile,
         currentCity,
         selectCity,
         currentLocationDetails,
@@ -256,20 +433,23 @@ export function AppProvider({ children }) {
         language,
         setLanguage,
         t,
-        user,
-        setUser,
-        updateUserProfile,
         defaultLocation,
         setDefaultLocation,
         autoDetectLocation,
         setAutoDetectLocation,
+        isLiveLocation,
+        isSyncingLocation,
+        syncDeviceLocation,
+        deviceLocationName,
         favorites,
         toggleFavorite,
         isFavorite,
         alerts,
         setAlerts,
         notificationSettings,
-        setNotificationSettings
+        setNotificationSettings,
+        mobileMenuOpen,
+        setMobileMenuOpen
       }}
     >
       {children}

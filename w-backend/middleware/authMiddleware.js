@@ -1,54 +1,64 @@
 const jwt = require('jsonwebtoken');
-const { users } = require('../models/store');
+const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'weatherai_secret_super_key_2026';
 
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Return default demo user for frictionless usage
-    req.user = users[0];
-    return next();
-  }
-
-  const token = authHeader.split(' ')[1];
+/**
+ * Strict authentication middleware: rejects requests without valid JWT
+ */
+async function requireAuth(req, res, next) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = users.find(u => u.id === decoded.id);
-    if (!user) {
-      req.user = users[0];
-    } else {
-      req.user = user;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please log in.'
+      });
     }
-    next();
-  } catch (err) {
-    // If token expired or invalid, fallback to demo user
-    req.user = users[0];
-    next();
-  }
-}
 
-function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'Authentication required' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  try {
+    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = users.find(u => u.id === decoded.id);
+
+    const user = await User.findById(decoded.id);
     if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
+      return res.status(401).json({
+        success: false,
+        message: 'User session invalid. Please log in again.'
+      });
     }
+
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or expired session. Please log in again.'
+    });
   }
 }
 
+/**
+ * Optional authentication middleware: attaches user if token is valid, else continues
+ */
+async function optionalAuth(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = await User.findById(decoded.id);
+      if (user) {
+        req.user = user;
+      }
+    }
+  } catch {
+    // Ignore invalid tokens for optional auth
+    req.user = null;
+  }
+  next();
+}
+
 module.exports = {
-  authMiddleware,
-  requireAuth
+  requireAuth,
+  optionalAuth
 };

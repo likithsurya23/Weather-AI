@@ -2,15 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Plus, Minus, MapPin, X, Loader2, Globe, Layers, Search } from 'lucide-react';
+import { Plus, Minus, MapPin, X, Loader2, Globe, Layers, Search, Menu, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
 import { useApp } from '../../Hooks/useAppContext';
 
 // Dynamic import for Leaflet map component to prevent SSR hydration errors
 const LeafletMap = dynamic(() => import('./LeafletMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full min-h-[520px] flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
-      <Loader2 className="w-5 h-5 animate-spin mr-2 text-blue-500" />
+    <div className="w-full h-full min-h-[300px] flex items-center justify-center bg-slate-900 text-slate-400 text-xs">
+      <Loader2 className="w-4 h-4 animate-spin mr-2 text-blue-500" />
       Loading interactive radar map...
     </div>
   )
@@ -20,8 +20,8 @@ const LeafletMap = dynamic(() => import('./LeafletMap'), {
 const WeatherGlobe = dynamic(() => import('./WeatherGlobe'), {
   ssr: false,
   loading: () => (
-    <div className="w-full min-h-[580px] flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
-      <Loader2 className="w-5 h-5 animate-spin mr-2 text-blue-500" />
+    <div className="w-full min-h-[300px] flex items-center justify-center bg-slate-900 text-slate-400 text-xs">
+      <Loader2 className="w-4 h-4 animate-spin mr-2 text-blue-500" />
       Initializing 3D Realistic Globe...
     </div>
   )
@@ -30,7 +30,19 @@ const WeatherGlobe = dynamic(() => import('./WeatherGlobe'), {
 export default function WeatherMapViewer() {
   const { temperatureUnit, selectCity, t } = useApp();
   const [viewMode, setViewMode] = useState('globe'); // 'globe' | 'map'
+  const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
+  const [isElaborated, setIsElaborated] = useState(false);
   const activeLayer = 'temperature';
+
+  const toggleElaborate = () => {
+    setIsElaborated(prev => !prev);
+    setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize?.();
+      }
+      window.dispatchEvent(new Event('resize'));
+    }, 350);
+  };
   const [mapSearch, setMapSearch] = useState('');
   const [zoomLevel, setZoomLevel] = useState(2);
   const [mapCenter, setMapCenter] = useState([20, 0]);
@@ -220,33 +232,59 @@ export default function WeatherMapViewer() {
   };
 
   return (
-    <div className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xl overflow-hidden flex flex-col transition-all">
-      {/* Top Controls Bar: View Toggle, Layer selector, Search */}
-      <div className="p-4 px-6 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-        {/* View Mode Switcher: 3D Globe vs 2D Map */}
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs">
+    <div className="bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl rounded-lg sm:rounded-xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs overflow-hidden flex flex-col transition-all">
+      {/* Top Controls Bar: Hamburger View Menu, Search */}
+      <div className="p-2 px-2.5 sm:px-3.5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+        {/* Hamburger View Mode Dropdown */}
+        <div className="relative">
           <button
-            onClick={() => setViewMode('globe')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'globe'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            onClick={() => setIsViewMenuOpen(!isViewMenuOpen)}
+            className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-md sm:rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors shadow-xs cursor-pointer"
+            title="Switch map view"
           >
-            <Globe className="w-3.5 h-3.5" />
-            <span>{t('map.globeView', '3D Realistic Globe')}</span>
+            <Menu className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+            <span className="text-blue-600 dark:text-blue-400 font-bold">
+              {viewMode === 'globe' ? t('map.globeView', '3D Realistic Globe') : t('map.mapView', '2D Radar Map')}
+            </span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
-          <button
-            onClick={() => setViewMode('map')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'map'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>{t('map.mapView', '2D Radar Map')}</span>
-          </button>
+
+          {isViewMenuOpen && (
+            <div className="absolute left-0 top-7 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-30 py-1">
+              <button
+                onClick={() => {
+                  setViewMode('globe');
+                  setIsViewMenuOpen(false);
+                }}
+                className={`w-full text-left px-2.5 py-1.5 text-xs font-medium flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/80 transition-colors cursor-pointer ${
+                  viewMode === 'globe'
+                    ? 'bg-blue-50 dark:bg-slate-700/80 text-blue-600 dark:text-blue-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className={`w-3.5 h-3.5 ${viewMode === 'globe' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                  <span>{t('map.globeView', '3D Realistic Globe')}</span>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('map');
+                  setIsViewMenuOpen(false);
+                }}
+                className={`w-full text-left px-2.5 py-1.5 text-xs font-medium flex items-center justify-between hover:bg-blue-50 dark:hover:bg-slate-700/80 transition-colors cursor-pointer ${
+                  viewMode === 'map'
+                    ? 'bg-blue-50 dark:bg-slate-700/80 text-blue-600 dark:text-blue-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Layers className={`w-3.5 h-3.5 ${viewMode === 'map' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                  <span>{t('map.mapView', '2D Radar Map')}</span>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 2D Map Search (Visible when in 2D Map mode) */}
@@ -275,9 +313,9 @@ export default function WeatherMapViewer() {
                     }
                   }}
                   placeholder={t('map.searchPlaceholder', 'Search map location...')}
-                  className="w-48 sm:w-60 px-3 py-1.5 pl-8 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="w-40 sm:w-52 px-2.5 py-1 pl-7 text-[11px] font-semibold rounded-md sm:rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                 />
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
+                <Search className="w-3 h-3 text-slate-400 absolute left-2 pointer-events-none" />
               </div>
               {isLoading && (
                 <Loader2 className="w-3.5 h-3.5 text-blue-500 ml-2 animate-spin" />
@@ -308,6 +346,25 @@ export default function WeatherMapViewer() {
               )}
             </div>
         )}
+
+        {/* Elaborate / Compact Toggle Button */}
+        <button
+          onClick={toggleElaborate}
+          className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-md sm:rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 transition-colors shadow-xs cursor-pointer ml-auto"
+          title={isElaborated ? 'Compact View' : 'Elaborate View'}
+        >
+          {isElaborated ? (
+            <>
+              <Minimize2 className="w-3 h-3 text-blue-500" />
+              <span>Compact</span>
+            </>
+          ) : (
+            <>
+              <Maximize2 className="w-3 h-3 text-blue-500" />
+              <span>Elaborate</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Main Map Viewer Area */}
@@ -316,10 +373,14 @@ export default function WeatherMapViewer() {
         <WeatherGlobe
           weatherStations={weatherStations}
           onSelectCity={selectCity}
+          isElaborated={isElaborated}
+          onToggleElaborate={toggleElaborate}
         />
       ) : (
-        /* 2D Interactive Radar Map */
-        <div className="relative w-full h-[540px] bg-slate-900 overflow-hidden">
+        /* 2D Interactive Radar Map (Initially Small, Expandable) */
+        <div className={`relative w-full max-w-full overflow-hidden transition-all duration-300 ease-in-out bg-slate-900 ${
+          isElaborated ? 'h-[360px] sm:h-[480px] lg:h-[540px]' : 'h-[240px] sm:h-[290px] lg:h-[330px]'
+        }`}>
           <LeafletMap
             mapRef={mapRef}
             mapCenter={mapCenter}
@@ -332,21 +393,21 @@ export default function WeatherMapViewer() {
             handleMapClick={handleMapClick}
           />
 
-          {/* Map Control Tools: Zoom Buttons */}
-          <div className="absolute bottom-6 left-6 flex flex-col gap-2 z-[1000]">
+          {/* Map Control Tools: Zoom Buttons (Minimized) */}
+          <div className="absolute bottom-3 left-3 flex flex-col gap-1 z-[1000]">
             <button
               onClick={() => setZoomLevel((prev) => Math.min(prev + 1, 18))}
-              className="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-md backdrop-blur-md transition-all cursor-pointer"
+              className="p-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-xs backdrop-blur-md transition-all cursor-pointer"
               title="Zoom in"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3 h-3" />
             </button>
             <button
               onClick={() => setZoomLevel((prev) => Math.max(prev - 1, 2))}
-              className="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-md backdrop-blur-md transition-all cursor-pointer"
+              className="p-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-xs backdrop-blur-md transition-all cursor-pointer"
               title="Zoom out"
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-3 h-3" />
             </button>
             <button
               onClick={() => {
@@ -355,45 +416,45 @@ export default function WeatherMapViewer() {
                 setSelectedLocation(null);
                 setClickedLocation(null);
               }}
-              className="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-md backdrop-blur-md transition-all cursor-pointer"
+              className="p-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-xs backdrop-blur-md transition-all cursor-pointer"
               title="Reset view"
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="w-3 h-3" />
             </button>
           </div>
 
-          {/* Click instruction overlay */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700/50 pointer-events-none">
-            <span className="text-xs text-slate-300 flex items-center gap-2">
-              <MapPin className="w-3 h-3" />
-              Click anywhere on the map to see location name
+          {/* Click instruction overlay (Minimized) */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-slate-800/80 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-slate-700/50 pointer-events-none max-w-[85%] truncate">
+            <span className="text-[10px] text-slate-300 flex items-center gap-1 truncate">
+              <MapPin className="w-2.5 h-2.5 shrink-0" />
+              <span className="truncate">Click map to inspect</span>
             </span>
           </div>
 
-          {/* Selected location info */}
+          {/* Selected location info (Minimized) */}
           {selectedLocation && (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] bg-slate-800/90 backdrop-blur-md border border-blue-500/30 rounded-xl px-4 py-2 shadow-xl">
-              <div className="flex items-center gap-2 text-white text-sm">
-                <MapPin className="w-4 h-4 text-blue-400" />
-                <span className="font-medium">📍 {selectedLocation.name}</span>
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[1000] bg-slate-800/90 backdrop-blur-md border border-blue-500/30 rounded-lg px-2.5 py-1 shadow-lg max-w-[85%] truncate">
+              <div className="flex items-center gap-1 text-white text-[11px] truncate">
+                <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
+                <span className="font-medium truncate">📍 {selectedLocation.name}</span>
                 <button
                   onClick={() => setSelectedLocation(null)}
-                  className="ml-2 hover:bg-slate-700 rounded-full p-0.5 cursor-pointer"
+                  className="ml-1 hover:bg-slate-700 rounded-full p-0.5 cursor-pointer shrink-0"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-2.5 h-2.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Gradient Legend */}
-          <div className="absolute bottom-6 right-6 z-[1000] bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3 shadow-xl backdrop-blur-md flex flex-col gap-1.5 w-56">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300">
+          {/* Gradient Legend (Minimized) */}
+          <div className="absolute bottom-3 right-3 z-[1000] bg-slate-900/90 border border-slate-700/80 rounded-lg p-1.5 shadow-lg backdrop-blur-md flex flex-col gap-0.5 w-32 sm:w-40">
+            <div className="flex items-center justify-between text-[9px] font-semibold text-slate-300">
               <span>Low</span>
-              <span className="capitalize font-bold text-white">{activeLayer} Intensity</span>
+              <span className="capitalize font-bold text-white">{activeLayer}</span>
               <span>High</span>
             </div>
-            <div className={`h-2.5 rounded-full bg-gradient-to-r ${getGradientLegend()} shadow-inner`} />
+            <div className={`h-1.5 rounded-full bg-gradient-to-r ${getGradientLegend()} shadow-inner`} />
           </div>
         </div>
       )}

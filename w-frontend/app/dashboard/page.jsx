@@ -34,6 +34,8 @@ import Sidebar from '../../src/components/layout/Sidebar';
 import TopNavbar from '../../src/components/layout/TopNavbar';
 import { useApp } from '../../src/Hooks/useAppContext';
 import { api } from '../../src/lib/api';
+import { formatDegree, formatTemp, formatTempNumber } from '../../src/lib/weatherUtils';
+import ProtectedRoute from '../../src/components/auth/ProtectedRoute';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -95,8 +97,8 @@ export default function DashboardPage() {
   // -------------------------------------------------------------
   // LIVE CURRENT WEATHER METRICS
   // -------------------------------------------------------------
-  const city = weather?.city || currentCity || 'Bengaluru';
-  const country = weather?.country || 'India';
+  const city = weather?.city || currentCity;
+  const country = weather?.country;
   const rawTemp = weather?.temp !== undefined ? Math.round(weather.temp) : 24;
   const condition = weather?.condition || 'Clear';
   const rawFeelsLike = weather?.feelsLike !== undefined ? Math.round(weather.feelsLike) : rawTemp;
@@ -105,8 +107,8 @@ export default function DashboardPage() {
   const pressure = weather?.pressure !== undefined ? weather.pressure : 1013;
   const visibility = weather?.visibility !== undefined ? weather.visibility : 10;
 
-  const displayTemp = temperatureUnit === 'fahrenheit' ? Math.round((rawTemp * 9) / 5 + 32) : rawTemp;
-  const displayFeelsLike = temperatureUnit === 'fahrenheit' ? Math.round((rawFeelsLike * 9) / 5 + 32) : rawFeelsLike;
+  const displayTemp = formatTempNumber(rawTemp, temperatureUnit);
+  const displayFeelsLike = formatTempNumber(rawFeelsLike, temperatureUnit);
   const unitSymbol = temperatureUnit === 'fahrenheit' ? '°F' : '°C';
 
   // -------------------------------------------------------------
@@ -132,14 +134,6 @@ export default function DashboardPage() {
       return <Cloud className="w-6 h-6 text-slate-400" />;
     }
     return <CloudSun className="w-6 h-6 text-amber-500" />;
-  };
-
-  const convertForecastTemp = (celsiusVal) => {
-    if (celsiusVal === undefined) return '--';
-    if (temperatureUnit === 'fahrenheit') {
-      return `${Math.round((celsiusVal * 9) / 5 + 32)}°`;
-    }
-    return `${Math.round(celsiusVal)}°`;
   };
 
   // -------------------------------------------------------------
@@ -276,7 +270,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent flex font-sans text-slate-900">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-transparent flex font-sans text-slate-900">
       {/* Sidebar Navigation */}
       <Sidebar />
 
@@ -284,69 +279,69 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <TopNavbar />
 
-        <main className="flex-1 p-6 sm:p-8 max-w-[1400px] w-full mx-auto space-y-6">
-          {/* Top Greeting Header Card */}
-          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+        <main className="flex-1 p-2.5 sm:p-4 lg:p-5 max-w-[1400px] w-full mx-auto space-y-3 sm:space-y-4 pb-20 lg:pb-8">
+          {/* Top Greeting Header Card (Small & Compact) */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-2.5 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20 shrink-0">
                 {new Date().getHours() < 18 ? (
-                  <Sun className="w-6 h-6 text-amber-200" />
+                  <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-200" />
                 ) : (
-                  <CloudSun className="w-6 h-6 text-blue-100" />
+                  <CloudSun className="w-4 h-4 sm:w-5 sm:h-5 text-blue-100" />
                 )}
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
                   {getGreeting()}, {displayName}!
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
                   Here&apos;s the latest live weather update for your location.
                 </p>
               </div>
             </div>
 
-            <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-slate-800/80">
+            <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-1.5 sm:pt-0 border-slate-100 dark:border-slate-800/80 text-[11px] sm:text-xs text-slate-500 font-medium">
               <span>{formattedDate}</span>
             </div>
           </div>
 
           {/* Main 2-Column Weather Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start">
 
             {/* ========================================================= */}
             {/* LEFT 8-COLUMN AREA */}
             {/* ========================================================= */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 space-y-3 sm:space-y-4">
 
               {/* Row 1: Current Weather + 5-Day Forecast */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
-                {/* 1. Current Weather Card */}
-                <div className="bg-gradient-to-br from-blue-50/70 via-white to-blue-50/40 rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full relative overflow-hidden">
+                {/* 1. Current Weather Card (Compact) */}
+                <div className="bg-gradient-to-br from-blue-50/70 via-white to-blue-50/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full relative overflow-hidden">
                   <div>
-                    <div className="flex items-center gap-1.5 text-slate-800 font-semibold text-sm">
-                      <MapPin className="w-4 h-4 text-slate-700" />
+                    <div className="flex items-center gap-1.5 text-slate-800 font-semibold text-xs sm:text-xs">
+                      <MapPin className="w-3.5 h-3.5 text-slate-700" />
                       <span>{city}{country ? `, ${country}` : ''}</span>
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between">
+                    <div className="mt-2.5 sm:mt-3 flex items-center justify-between">
                       <div>
-                        <div className="text-5xl font-bold text-slate-900 tracking-tight">
+                        <div className="text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight">
                           {displayTemp}{unitSymbol}
                         </div>
-                        <div className="text-base font-semibold text-slate-800 mt-1">
+                        <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
                           {condition}
                         </div>
-                        <div className="text-xs text-slate-500 font-normal mt-0.5">
+                        <div className="text-[10px] sm:text-[11px] text-slate-500 font-normal mt-0.5">
                           {t('dash.feelsLike', 'Feels like')} {displayFeelsLike}{unitSymbol}
                         </div>
                       </div>
 
-                      {/* Sun & Cloud Illustration */}
-                      <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-                        <div className="absolute top-2 right-4 w-12 h-12 rounded-full bg-amber-400 shadow-lg shadow-amber-400/50 animate-pulse" style={{ animationDuration: '4s' }} />
-                        <div className="absolute bottom-2 right-1 z-10">
-                          <svg className="w-20 h-14 filter drop-shadow-md" viewBox="0 0 80 50" fill="none">
+                      {/* Sun & Cloud Illustration (Compact) */}
+                      <div className="relative w-14 h-14 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center">
+                        <div className="absolute top-1 sm:top-1.5 right-1.5 sm:right-3 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-amber-400 shadow-md shadow-amber-400/50 animate-pulse" style={{ animationDuration: '4s' }} />
+                        <div className="absolute bottom-1 sm:bottom-1.5 right-0.5 z-10">
+                          <svg className="w-12 h-8 sm:w-16 sm:h-11 filter drop-shadow-sm" viewBox="0 0 80 50" fill="none">
                             <path
                               d="M20 45C10 45 2 37 2 27C2 18 9 10 18 10C21 4 28 0 36 0C46 0 54 6 56 15C63 15 70 21 70 29C70 38 62 45 52 45H20Z"
                               fill="#ffffff"
@@ -359,64 +354,64 @@ export default function DashboardPage() {
                   </div>
 
                   {/* 4 Bottom Metrics */}
-                  <div className="grid grid-cols-4 gap-2 pt-5 mt-4 border-t border-slate-200/60 text-center">
+                  <div className="grid grid-cols-4 gap-1 pt-2.5 sm:pt-3 mt-2.5 sm:mt-3 border-t border-slate-200/60 text-center">
                     <div className="flex flex-col items-center">
-                      <Droplets className="w-4 h-4 text-blue-500 mb-1" />
-                      <span className="text-[11px] text-slate-500 font-normal">{t('dash.humidity', 'Humidity')}</span>
-                      <span className="text-xs font-bold text-slate-800 mt-0.5">{humidity}%</span>
+                      <Droplets className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-500 mb-0.5" />
+                      <span className="text-[9px] sm:text-[10px] text-slate-500 font-normal">{t('dash.humidity', 'Humidity')}</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 mt-0.5">{humidity}%</span>
                     </div>
                     <div className="flex flex-col items-center">
-                      <Wind className="w-4 h-4 text-slate-500 mb-1" />
-                      <span className="text-[11px] text-slate-500 font-normal">{t('dash.windSpeed', 'Wind')}</span>
-                      <span className="text-xs font-bold text-slate-800 mt-0.5">{windSpeed} km/h</span>
+                      <Wind className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 mb-0.5" />
+                      <span className="text-[9px] sm:text-[10px] text-slate-500 font-normal">{t('dash.windSpeed', 'Wind')}</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 mt-0.5">{windSpeed} km/h</span>
                     </div>
                     <div className="flex flex-col items-center">
-                      <Gauge className="w-4 h-4 text-slate-500 mb-1" />
-                      <span className="text-[11px] text-slate-500 font-normal">{t('dash.pressure', 'Pressure')}</span>
-                      <span className="text-xs font-bold text-slate-800 mt-0.5">{pressure} hPa</span>
+                      <Gauge className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 mb-0.5" />
+                      <span className="text-[9px] sm:text-[10px] text-slate-500 font-normal">{t('dash.pressure', 'Pressure')}</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 mt-0.5">{pressure} hPa</span>
                     </div>
                     <div className="flex flex-col items-center">
-                      <Eye className="w-4 h-4 text-slate-500 mb-1" />
-                      <span className="text-[11px] text-slate-500 font-normal">{t('dash.visibility', 'Visibility')}</span>
-                      <span className="text-xs font-bold text-slate-800 mt-0.5">{visibility} km</span>
+                      <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500 mb-0.5" />
+                      <span className="text-[9px] sm:text-[10px] text-slate-500 font-normal">{t('dash.visibility', 'Visibility')}</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 mt-0.5">{visibility} km</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. 5-Day Forecast Card */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full">
+                {/* 2. 5-Day Forecast Card (Compact) */}
+                <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                       {t('dash.sevenDayForecast', '5-Day Forecast')}
                     </h3>
                     <Link
                       href="/search"
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                      className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
                     >
                       <span>{t('common.details', 'View Details')}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </Link>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-1 pt-6 pb-2 text-center items-center">
+                  <div className="grid grid-cols-5 gap-1 pt-3 sm:pt-4 pb-0.5 text-center items-center">
                     {forecastList.map((item, index) => {
                       const dayName = item.day || 'Day';
                       const dateStr = item.date || `Day ${index + 1}`;
                       return (
-                        <div key={index} className="flex flex-col items-center justify-between space-y-2.5">
+                        <div key={index} className="flex flex-col items-center justify-between space-y-1 sm:space-y-1.5">
                           <div>
-                            <div className="text-xs font-bold text-slate-800 truncate w-14 mx-auto">{dayName}</div>
-                            <div className="text-[11px] text-slate-400 font-normal truncate w-14 mx-auto">{dateStr}</div>
+                            <div className="text-[10px] sm:text-[11px] font-bold text-slate-800 truncate w-10 sm:w-12 mx-auto">{dayName}</div>
+                            <div className="text-[9px] sm:text-[10px] text-slate-400 font-normal truncate w-10 sm:w-12 mx-auto">{dateStr}</div>
                           </div>
-                          <div className="py-1 flex items-center justify-center h-8">
+                          <div className="py-0.5 flex items-center justify-center h-5 sm:h-7">
                             {renderForecastIcon(item.icon, item.condition)}
                           </div>
                           <div>
-                            <div className="text-xs font-bold text-slate-900">
-                              {convertForecastTemp(item.tempMax)}
+                            <div className="text-[10px] sm:text-[11px] font-bold text-slate-900">
+                              {formatDegree(item.tempMax, temperatureUnit)}
                             </div>
-                            <div className="text-[11px] text-slate-400 font-medium mt-0.5">
-                              {convertForecastTemp(item.tempMin)}
+                            <div className="text-[9px] sm:text-[10px] text-slate-400 font-medium mt-0.5">
+                              {formatDegree(item.tempMin, temperatureUnit)}
                             </div>
                           </div>
                         </div>
@@ -428,15 +423,15 @@ export default function DashboardPage() {
               </div>
 
               {/* Row 2: Temperature Trend + Air Quality Index */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
                 {/* 3. Temperature Trend Card */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full">
+                <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                       {t('dash.tempTrend', 'Temperature Trend')}
                     </h3>
-                    <span className="text-xs text-slate-400 font-medium">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
                       {t('dash.hourlyForecast', '24-Hour Forecast')}
                     </span>
                   </div>
@@ -516,30 +511,28 @@ export default function DashboardPage() {
                           left: `${(trendPoints[hoveredTrendPoint].x / 360) * 100}%`
                         }}
                       >
-                        {temperatureUnit === 'fahrenheit'
-                          ? `${Math.round((trendPoints[hoveredTrendPoint].temp * 9) / 5 + 32)}°F`
-                          : `${trendPoints[hoveredTrendPoint].temp}°C`}
+                        {formatTemp(trendPoints[hoveredTrendPoint].temp, temperatureUnit)}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* 4. Air Quality Index Card */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full">
+                {/* 4. Air Quality Index Card (Compact) */}
+                <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between h-full">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                       {t('dash.airQuality', 'Air Quality Index')}
                     </h3>
                     <button
                       title="AQI indicates ambient pollution levels and health safety."
                       className="text-slate-400 hover:text-slate-600 transition-colors"
                     >
-                      <Info className="w-4 h-4" />
+                      <Info className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between py-4 gap-6">
-                    <div className="relative flex items-center justify-center shrink-0 w-32 h-32">
+                  <div className="flex flex-col sm:flex-row items-center justify-between py-2 sm:py-2.5 gap-3 sm:gap-4">
+                    <div className="relative flex items-center justify-center shrink-0 w-24 h-24 sm:w-28 sm:h-28">
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r={aqiRadius} stroke="#E2E8F0" strokeWidth={aqiStrokeWidth} fill="transparent" />
                         <circle
@@ -556,16 +549,16 @@ export default function DashboardPage() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <Leaf className="w-4 h-4 text-emerald-500 mb-0.5 fill-emerald-500" />
-                        <span className="text-2xl font-bold text-slate-900 leading-none">{aqiVal}</span>
-                        <span className="text-[11px] font-semibold text-slate-500 mt-0.5">{aqiLabel}</span>
+                        <Leaf className="w-3.5 h-3.5 text-emerald-500 mb-0.5 fill-emerald-500" />
+                        <span className="text-lg sm:text-xl font-bold text-slate-900 leading-none">{aqiVal}</span>
+                        <span className="text-[9px] sm:text-[10px] font-semibold text-slate-500 mt-0.5">{aqiLabel}</span>
                       </div>
                     </div>
 
-                    <div className="flex-1 space-y-1.5 text-xs">
+                    <div className="w-full sm:flex-1 space-y-1 text-[11px] sm:text-xs">
                       {pollutants.map((p) => (
                         <div key={p.name} className="flex items-center justify-between font-medium">
-                          <div className="flex items-center gap-2 text-slate-500">
+                          <div className="flex items-center gap-1.5 text-slate-500">
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                             <span>{p.name}</span>
                           </div>
@@ -575,9 +568,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50/70 border border-emerald-100 text-slate-700 text-xs">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-[11px] font-medium text-slate-700">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg sm:rounded-xl bg-emerald-50/70 border border-emerald-100 text-slate-700 text-[10px] sm:text-[11px]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="font-medium text-slate-700">
                       {aqiVal <= 50 ? t('dash.airQualityGood', 'Air quality is satisfactory. Enjoy your day!') : `Air quality is ${aqiLabel.toLowerCase()} in ${city}.`}
                     </span>
                   </div>
@@ -585,34 +578,34 @@ export default function DashboardPage() {
 
               </div>
 
-              {/* Row 3: 5. Weather Map Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Map className="w-4 h-4" />
+              {/* Row 3: 5. Weather Map Card (Compact) */}
+              <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Map className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-slate-900 leading-tight">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
                         {t('map.title', 'Weather Map')}
                       </h3>
-                      <p className="text-xs text-slate-400 font-normal">
-                        {t('dash.realtimeTelemetry', 'Live weather conditions across regions')} ({city})
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-normal">
+                        {t('dash.realtimeTelemetry', 'Live weather conditions')} ({city})
                       </p>
                     </div>
                   </div>
 
                   <Link
                     href="/map"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
                   >
                     <span>{t('dash.viewFullMap', 'View Full Map')}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 items-center">
-                  <div className="md:col-span-8 h-64 sm:h-72 rounded-xl bg-slate-100/80 border border-slate-200/80 relative overflow-hidden flex items-center justify-center select-none">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2.5 sm:pt-3 items-center">
+                  <div className="md:col-span-8 h-40 sm:h-52 md:h-56 rounded-xl bg-slate-100/80 border border-slate-200/80 relative overflow-hidden flex items-center justify-center select-none">
                     <div
                       className="w-full h-full relative transition-transform duration-300 ease-out"
                       style={{ transform: `scale(${mapZoomLevel})` }}
@@ -668,41 +661,41 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="absolute top-[68%] left-[45%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                        <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg ring-4 ring-blue-500/30 animate-bounce" style={{ animationDuration: '2.5s' }}>
-                          <MapPin className="w-4 h-4 fill-white text-blue-600" />
+                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md ring-3 ring-blue-500/30 animate-bounce" style={{ animationDuration: '2.5s' }}>
+                          <MapPin className="w-3.5 h-3.5 fill-white text-blue-600" />
                         </div>
                       </div>
                     </div>
 
-                    <div className="absolute bottom-3 left-3 flex flex-col bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden z-10">
+                    <div className="absolute bottom-2.5 left-2.5 flex flex-col bg-white rounded-lg shadow-xs border border-slate-200 overflow-hidden z-10">
                       <button
                         onClick={() => setMapZoomLevel((prev) => Math.min(prev + 0.15, 1.4))}
-                        className="p-1.5 hover:bg-slate-50 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
+                        className="p-1 hover:bg-slate-50 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
                         title={t('map.zoomIn', 'Zoom In')}
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => setMapZoomLevel((prev) => Math.max(prev - 0.15, 0.8))}
-                        className="p-1.5 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
+                        className="p-1 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
                         title={t('map.zoomOut', 'Zoom Out')}
                       >
-                        <Minus className="w-3.5 h-3.5" />
+                        <Minus className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="md:col-span-4 space-y-2.5 pl-2">
+                  <div className="md:col-span-4 space-y-1.5 pl-1">
                     {mapLayers.map((layer) => {
                       const isSelected = selectedMapLayer === layer.id;
                       return (
                         <button
                           key={layer.id}
                           onClick={() => setSelectedMapLayer(layer.id)}
-                          className="w-full flex items-center gap-3 text-left py-1 text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer group"
+                          className="w-full flex items-center gap-2.5 text-left py-0.5 text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer group"
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-400 group-hover:border-blue-500 bg-transparent'
+                            className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-400 group-hover:border-blue-500 bg-transparent'
                               }`}
                           >
                             {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
@@ -720,41 +713,41 @@ export default function DashboardPage() {
             </div>
 
             {/* ========================================================= */}
-            {/* RIGHT 4-COLUMN AREA */}
+            {/* RIGHT 4-COLUMN AREA (Compact) */}
             {/* ========================================================= */}
-            <div className="lg:col-span-4 space-y-6">
+            <div className="lg:col-span-4 space-y-3 sm:space-y-4">
 
               {/* 6. Live Alerts Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center justify-between pb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-md bg-red-100 text-red-600 flex items-center justify-center">
-                      <AlertTriangle className="w-3.5 h-3.5 fill-red-600 text-white" />
+              <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs">
+                <div className="flex items-center justify-between pb-2 sm:pb-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4.5 h-4.5 rounded-md bg-red-100 text-red-600 flex items-center justify-center">
+                      <AlertTriangle className="w-3 h-3 fill-red-600 text-white" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900">{t('dash.activeAlerts', 'Alerts')}</h3>
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">{t('dash.activeAlerts', 'Alerts')}</h3>
                   </div>
 
                   <Link
                     href="/alerts"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
                   >
                     <span>{t('common.viewAll', 'View All')}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </Link>
                 </div>
 
-                <div className="p-4 rounded-xl bg-red-50/80 border border-red-100 flex items-start gap-3.5 transition-all">
-                  <div className="w-8 h-8 rounded-lg bg-red-100/90 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertTriangle className="w-4 h-4 fill-red-600 text-white" />
+                <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-red-50/80 border border-red-100 flex items-start gap-2.5 transition-all">
+                  <div className="w-6 h-6 rounded-lg bg-red-100/90 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <AlertTriangle className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-red-600 text-white" />
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-slate-900 leading-tight">
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-slate-900 leading-tight">
                       {alertItem.title}
                     </h4>
-                    <p className="text-xs text-slate-600 leading-snug">
+                    <p className="text-[10px] sm:text-[11px] text-slate-600 leading-snug">
                       {alertItem.description}
                     </p>
-                    <span className="text-[11px] text-slate-400 font-medium block pt-1">
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium block pt-0.5">
                       {alertItem.time || t('common.live', 'Live Alert')}
                     </span>
                   </div>
@@ -762,74 +755,74 @@ export default function DashboardPage() {
               </div>
 
               {/* 7. Quick Actions Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-                <h3 className="text-base font-bold text-slate-900 pb-3">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 pb-2">
                   {t('fav.addLocation', 'Quick Actions')}
                 </h3>
 
-                <div className="space-y-2 pt-1">
+                <div className="space-y-1 pt-0.5">
                   <button
                     onClick={() => setIsAddLocationOpen(true)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 text-slate-700 transition-all cursor-pointer group"
+                    className="w-full flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 text-slate-700 transition-all cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
                       <span className="text-xs font-semibold text-slate-800">{t('fav.addLocation', 'Add Location')}</span>
                     </div>
-                    <Plus className="w-4 h-4 text-slate-400 group-hover:text-slate-800 transition-colors" />
+                    <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition-colors" />
                   </button>
 
                   <Link
                     href="/alerts"
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 text-slate-700 transition-all cursor-pointer group"
+                    className="w-full flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 text-slate-700 transition-all cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3">
-                      <Bell className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                      <Bell className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
                       <span className="text-xs font-semibold text-slate-800">{t('settings.notifications', 'Set Alerts')}</span>
                     </div>
-                    <Plus className="w-4 h-4 text-slate-400 group-hover:text-slate-800 transition-colors" />
+                    <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition-colors" />
                   </Link>
 
                   <button
                     onClick={handleSaveLocation}
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 text-slate-700 transition-all cursor-pointer group"
+                    className="w-full flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 text-slate-700 transition-all cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3">
-                      <Bookmark className={`w-4 h-4 ${isCurrentFav ? 'text-blue-600 fill-blue-600' : 'text-slate-600 group-hover:text-blue-600'} transition-colors`} />
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                      <Bookmark className={`w-3.5 h-3.5 ${isCurrentFav ? 'text-blue-600 fill-blue-600' : 'text-slate-600 group-hover:text-blue-600'} transition-colors`} />
                       <span className="text-xs font-semibold text-slate-800">
                         {savedSuccess ? t('dash.savedLocation', 'Location Saved!') : isCurrentFav ? t('dash.savedLocation', 'Saved in Favorites') : t('dash.saveLocation', 'Save This Location')}
                       </span>
                     </div>
                     {savedSuccess ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
                     ) : (
-                      <Plus className="w-4 h-4 text-slate-400 group-hover:text-slate-800 transition-colors" />
+                      <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition-colors" />
                     )}
                   </button>
                 </div>
               </div>
 
               {/* 8. Live Disaster News Card (Connected to Real Live Global News API) */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center justify-between pb-4">
-                  <h3 className="text-base font-bold text-slate-900">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs">
+                <div className="flex items-center justify-between pb-2 sm:pb-3">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                     {t('dash.disasterMonitoring', 'Disaster News')}
                   </h3>
                   <Link
                     href="/alerts"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
                   >
                     <span>{t('common.viewAll', 'View All')}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </Link>
                 </div>
 
-                <div className="space-y-3.5">
+                <div className="space-y-2 sm:space-y-2.5">
                   {loadingNews ? (
-                    <div className="space-y-3 py-2 animate-pulse">
-                      <div className="h-12 bg-slate-100 rounded-xl" />
-                      <div className="h-12 bg-slate-100 rounded-xl" />
-                      <div className="h-12 bg-slate-100 rounded-xl" />
+                    <div className="space-y-1.5 py-1.5 animate-pulse">
+                      <div className="h-8 bg-slate-100 rounded-lg" />
+                      <div className="h-8 bg-slate-100 rounded-lg" />
+                      <div className="h-8 bg-slate-100 rounded-lg" />
                     </div>
                   ) : news.length > 0 ? (
                     news.map((item, index) => (
@@ -838,21 +831,21 @@ export default function DashboardPage() {
                         href={item.url || '/alerts'}
                         target={item.url ? '_blank' : '_self'}
                         rel="noreferrer"
-                        className="flex items-start gap-3 group cursor-pointer"
+                        className="flex items-start gap-2 sm:gap-2.5 group cursor-pointer"
                       >
                         {/* News Thumbnail Image */}
-                        <div className="w-14 h-12 rounded-lg bg-slate-100 border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center">
+                        <div className="w-10 h-8 sm:w-12 sm:h-10 rounded-md sm:rounded-lg bg-slate-100 border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center">
                           {item.imageUrl ? (
                             <Image
                               src={item.imageUrl}
                               alt={item.title || 'News thumbnail'}
-                              width={56}
-                              height={48}
+                              width={48}
+                              height={40}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                               unoptimized
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 text-xs font-bold">
+                            <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 text-[9px] sm:text-[10px] font-bold">
                               {item.category?.slice(0, 3).toUpperCase() || 'NEWS'}
                             </div>
                           )}
@@ -860,22 +853,22 @@ export default function DashboardPage() {
 
                         {/* Headline and time */}
                         <div className="space-y-0.5 flex-1 min-w-0">
-                          <h4 className="text-xs font-semibold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
+                          <h4 className="text-[10px] sm:text-[11px] font-semibold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
                             {item.title}
                           </h4>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-400 font-normal">
+                          <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-400 font-normal">
                             <span>{item.time || t('common.live', 'Live')}</span>
                             {item.source && <span>• {item.source}</span>}
                           </div>
                         </div>
 
                         {item.url && (
-                          <ExternalLink className="w-3 h-3 text-slate-300 group-hover:text-blue-600 shrink-0 mt-1 transition-colors" />
+                          <ExternalLink className="w-2.5 h-2.5 text-slate-300 group-hover:text-blue-600 shrink-0 mt-1 transition-colors" />
                         )}
                       </a>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-xs text-slate-400">
+                    <div className="text-center py-3 text-xs text-slate-400">
                       {t('alerts.noAlerts', 'No disaster news reported at this time.')}
                     </div>
                   )}
@@ -883,31 +876,30 @@ export default function DashboardPage() {
               </div>
 
               {/* 9. AI Weather Assistant Card */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2.5 pb-3">
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Bot className="w-5 h-5" />
+                  <div className="flex items-center gap-2 pb-2">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                       {t('dash.askAi', 'AI Weather Assistant')}
                     </h3>
                   </div>
 
-                  <p className="text-xs text-slate-600 leading-relaxed pt-1">
+                  <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed pt-0.5">
                     {t('chat.subtitle', 'Hi! I\'m your Weather AI Assistant. Ask me anything about the weather, natural disasters, or safety tips.')}
                   </p>
 
-                  <div className="space-y-2 pt-4">
+                  <div className="space-y-1.5 pt-2.5">
                     {[
                       `Will it rain in ${city} today?`,
-                      'Any active storm or cyclone warnings nearby?',
-                      'How can I stay safe during heavy rainfall?'
+                      'Any active storm or cyclone warnings nearby?'
                     ].map((prompt, idx) => (
                       <button
                         key={idx}
                         onClick={() => router.push(`/chat?prompt=${encodeURIComponent(prompt)}`)}
-                        className="w-full text-left px-3.5 py-2 rounded-full border border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 text-blue-700 text-xs font-medium transition-all cursor-pointer truncate"
+                        className="w-full text-left px-2.5 py-1.5 rounded-full border border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 text-blue-700 text-[10px] sm:text-[11px] font-medium transition-all cursor-pointer truncate"
                       >
                         {prompt}
                       </button>
@@ -915,13 +907,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <form onSubmit={handleAiSubmit} className="relative pt-4">
+                <form onSubmit={handleAiSubmit} className="relative pt-3">
                   <input
                     type="text"
                     value={aiQuestion}
                     onChange={(e) => setAiQuestion(e.target.value)}
                     placeholder={t('dash.askAiPlaceholder', 'Type your question...')}
-                    className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-normal"
+                    className="w-full pl-3 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-normal"
                   />
                   <button
                     type="submit"
@@ -1032,6 +1024,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

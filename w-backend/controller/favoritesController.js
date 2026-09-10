@@ -1,12 +1,12 @@
-const { favorites } = require('../models/store');
+const Favorite = require('../models/Favorite');
 const API_KEY = process.env.WEATHER_API_KEY || 'a5a4f8e5c8544a76b0872757260909';
 
 exports.getFavorites = async (req, res, next) => {
   try {
-    const userId = req.user ? req.user.id : 'usr_default_1';
-    const userFavorites = favorites.filter(f => f.userId === userId || !f.userId);
+    const userId = req.user._id;
+    const userFavorites = await Favorite.find({ userId }).sort({ createdAt: -1 });
 
-    // Fetch live weather data for each favorite city using WeatherAPI
+    // Enrich with live weather from WeatherAPI
     const liveFavorites = await Promise.all(
       userFavorites.map(async (fav) => {
         try {
@@ -15,7 +15,9 @@ exports.getFavorites = async (req, res, next) => {
           if (response.ok) {
             const data = await response.json();
             return {
-              ...fav,
+              id: fav._id.toString(),
+              _id: fav._id.toString(),
+              userId: fav.userId.toString(),
               city: data.location.name,
               country: data.location.country,
               temp: Math.round(data.current.temp_c),
@@ -23,13 +25,27 @@ exports.getFavorites = async (req, res, next) => {
               iconUrl: data.current.condition.icon,
               lat: data.location.lat,
               lon: data.location.lon,
-              updatedAt: new Date().toISOString()
+              isFavorite: true,
+              updatedAt: fav.updatedAt
             };
           }
         } catch (e) {
           console.warn(`[WeatherAPI] Error fetching live favorite for ${fav.city}:`, e.message);
         }
-        return fav;
+        return {
+          id: fav._id.toString(),
+          _id: fav._id.toString(),
+          userId: fav.userId.toString(),
+          city: fav.city,
+          country: fav.country,
+          temp: fav.temp,
+          condition: fav.condition,
+          iconUrl: fav.iconUrl,
+          lat: fav.lat,
+          lon: fav.lon,
+          isFavorite: true,
+          updatedAt: fav.updatedAt
+        };
       })
     );
 
@@ -44,23 +60,28 @@ exports.getFavorites = async (req, res, next) => {
 
 exports.addFavorite = async (req, res, next) => {
   try {
-    const userId = req.user ? req.user.id : 'usr_default_1';
+    const userId = req.user._id;
     const { city } = req.body;
 
-    if (!city) {
+    if (!city || !city.trim()) {
       return res.status(400).json({ success: false, message: 'City is required' });
     }
 
-    const existing = favorites.find(f => 
-      (f.userId === userId || !f.userId) && 
-      f.city.toLowerCase() === city.toLowerCase()
-    );
+    const trimmedCity = city.trim();
+    const existing = await Favorite.findOne({
+      userId,
+      city: { $regex: new RegExp(`^${trimmedCity}$`, 'i') }
+    });
 
     if (existing) {
-      return res.json({ success: true, data: existing, message: 'City already in favorites' });
+      return res.json({
+        success: true,
+        data: existing,
+        message: 'City already in favorites'
+      });
     }
 
-    // Fetch real metrics from WeatherAPI
+    // Fetch live metrics
     let liveTemp = 24;
     let liveCondition = 'Sunny';
     let countryName = 'Global';
@@ -68,7 +89,7 @@ exports.addFavorite = async (req, res, next) => {
     let lon = 0;
 
     try {
-      const url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(city)}`;
+      const url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(trimmedCity)}`;
       const response = await fetch(url, { signal: AbortSignal.timeout(3500) });
       if (response.ok) {
         const data = await response.json();
@@ -78,96 +99,138 @@ exports.addFavorite = async (req, res, next) => {
         lat = data.location.lat;
         lon = data.location.lon;
       }
-    } catch (e) {}
+    } catch (e) {
+      // Use fallback
+    }
 
-    const newFav = {
-      id: 'fav_' + Date.now(),
+    const newFav = new Favorite({
       userId,
-      city,
+      city: trimmedCity,
       country: countryName,
       lat,
       lon,
       temp: liveTemp,
       condition: liveCondition,
-      isFavorite: true,
-      updatedAt: new Date().toISOString()
-    };
+      isFavorite: true
+    });
 
-    favorites.push(newFav);
+    await newFav.save();
+
     res.status(201).json({
       success: true,
       message: 'Added to favorites',
-      data: newFav
+      data: {
+        id: newFav._id.toString(),
+        _id: newFav._id.toString(),
+        city: newFav.city,
+        country: newFav.country,
+        temp: newFav.temp,
+        condition: newFav.condition,
+        isFavorite: true
+      }
     });
   } catch (err) {
     next(err);
   }
 };
 
-exports.removeFavorite = (req, res) => {
-  const { id } = req.params;
-  const index = favorites.findIndex(f => f.id === id || f.city.toLowerCase() === id.toLowerCase());
-  
-  if (index !== -1) {
-    favorites.splice(index, 1);
-    return res.json({ success: true, message: 'Removed from favorites' });
-  }
-
-  res.status(404).json({ success: false, message: 'Favorite not found' });
-};
-
 exports.toggleFavorite = async (req, res, next) => {
   try {
-    const userId = req.user ? req.user.id : 'usr_default_1';
-    const { city } = req.body;
+    const userId = req.user._id;
+    const { city, country, temp, condition } = req.body;
 
-    if (!city) {
+    if (!city || !city.trim()) {
       return res.status(400).json({ success: false, message: 'City is required' });
     }
 
-    const index = favorites.findIndex(f => 
-      (f.userId === userId || !f.userId) && 
-      f.city.toLowerCase() === city.toLowerCase()
-    );
+    const trimmedCity = city.trim();
+    const existing = await Favorite.findOne({
+      userId,
+      city: { $regex: new RegExp(`^${trimmedCity}$`, 'i') }
+    });
 
-    if (index !== -1) {
-      const removed = favorites.splice(index, 1)[0];
-      return res.json({ success: true, action: 'removed', isFavorite: false, data: removed });
-    } else {
-      let liveTemp = 24;
-      let liveCondition = 'Sunny';
-      let countryName = 'Global';
-      let lat = 0;
-      let lon = 0;
-
-      try {
-        const url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(city)}`;
-        const response = await fetch(url, { signal: AbortSignal.timeout(3500) });
-        if (response.ok) {
-          const data = await response.json();
-          liveTemp = Math.round(data.current.temp_c);
-          liveCondition = data.current.condition.text;
-          countryName = data.location.country;
-          lat = data.location.lat;
-          lon = data.location.lon;
-        }
-      } catch (e) {}
-
-      const newFav = {
-        id: 'fav_' + Date.now(),
-        userId,
-        city,
-        country: countryName,
-        lat,
-        lon,
-        temp: liveTemp,
-        condition: liveCondition,
-        isFavorite: true,
-        updatedAt: new Date().toISOString()
-      };
-      favorites.push(newFav);
-      return res.json({ success: true, action: 'added', isFavorite: true, data: newFav });
+    if (existing) {
+      await Favorite.findByIdAndDelete(existing._id);
+      return res.json({
+        success: true,
+        action: 'removed',
+        isFavorite: false,
+        data: { id: existing._id.toString(), city: trimmedCity }
+      });
     }
+
+    let liveTemp = temp || 24;
+    let liveCondition = condition || 'Sunny';
+    let countryName = country || 'Global';
+    let lat = 0;
+    let lon = 0;
+
+    try {
+      const url = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(trimmedCity)}`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(3500) });
+      if (response.ok) {
+        const data = await response.json();
+        liveTemp = Math.round(data.current.temp_c);
+        liveCondition = data.current.condition.text;
+        countryName = data.location.country;
+        lat = data.location.lat;
+        lon = data.location.lon;
+      }
+    } catch (e) {
+      // Keep defaults
+    }
+
+    const newFav = new Favorite({
+      userId,
+      city: trimmedCity,
+      country: countryName,
+      lat,
+      lon,
+      temp: liveTemp,
+      condition: liveCondition,
+      isFavorite: true
+    });
+
+    await newFav.save();
+
+    return res.json({
+      success: true,
+      action: 'added',
+      isFavorite: true,
+      data: {
+        id: newFav._id.toString(),
+        _id: newFav._id.toString(),
+        city: newFav.city,
+        country: newFav.country,
+        temp: newFav.temp,
+        condition: newFav.condition,
+        isFavorite: true
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.removeFavorite = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+
+    const query = {
+      userId,
+      $or: [
+        { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null },
+        { city: { $regex: new RegExp(`^${id}$`, 'i') } }
+      ].filter(Boolean)
+    };
+
+    const deleted = await Favorite.findOneAndDelete(query);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Favorite not found' });
+    }
+
+    res.json({ success: true, message: 'Removed from favorites' });
   } catch (err) {
     next(err);
   }

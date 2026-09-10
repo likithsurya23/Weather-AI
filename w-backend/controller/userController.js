@@ -1,48 +1,84 @@
-const { users, favorites, chatHistories } = require('../models/store');
+const User = require('../models/User');
+const Favorite = require('../models/Favorite');
+const ChatHistory = require('../models/ChatHistory');
 
-exports.getPreferences = (req, res) => {
-  const user = req.user || users[0];
-  res.json({
-    success: true,
-    data: user.preferences
-  });
+exports.getPreferences = async (req, res, next) => {
+  try {
+    const user = req.user;
+    res.json({
+      success: true,
+      data: user.preferences
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.updatePreferences = (req, res) => {
-  const user = req.user || users[0];
-  const { temperatureUnit, language, theme, weatherAlerts, weeklySummary, marketingUpdates } = req.body;
+exports.updatePreferences = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const {
+      temperatureUnit,
+      windSpeedUnit,
+      pressureUnit,
+      dateFormat,
+      timeFormat,
+      language,
+      theme,
+      accentColor,
+      weatherAlerts,
+      weeklySummary,
+      marketingUpdates,
+      autoDetectLocation,
+      defaultLocation
+    } = req.body;
 
-  if (temperatureUnit) user.preferences.temperatureUnit = temperatureUnit;
-  if (language) user.preferences.language = language;
-  if (theme) user.preferences.theme = theme;
-  if (weatherAlerts !== undefined) user.preferences.weatherAlerts = weatherAlerts;
-  if (weeklySummary !== undefined) user.preferences.weeklySummary = weeklySummary;
-  if (marketingUpdates !== undefined) user.preferences.marketingUpdates = marketingUpdates;
+    if (!user.preferences) {
+      user.preferences = {};
+    }
 
-  res.json({
-    success: true,
-    message: 'Preferences updated successfully',
-    data: user.preferences
-  });
+    if (temperatureUnit) user.preferences.temperatureUnit = temperatureUnit;
+    if (windSpeedUnit) user.preferences.windSpeedUnit = windSpeedUnit;
+    if (pressureUnit) user.preferences.pressureUnit = pressureUnit;
+    if (dateFormat) user.preferences.dateFormat = dateFormat;
+    if (timeFormat) user.preferences.timeFormat = timeFormat;
+    if (language) user.preferences.language = language;
+    if (theme) user.preferences.theme = theme;
+    if (accentColor) user.preferences.accentColor = accentColor;
+    if (weatherAlerts !== undefined) user.preferences.weatherAlerts = weatherAlerts;
+    if (weeklySummary !== undefined) user.preferences.weeklySummary = weeklySummary;
+    if (marketingUpdates !== undefined) user.preferences.marketingUpdates = marketingUpdates;
+    if (autoDetectLocation !== undefined) user.preferences.autoDetectLocation = autoDetectLocation;
+    if (defaultLocation !== undefined) user.preferences.defaultLocation = defaultLocation;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Preferences updated successfully',
+      data: user.preferences
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.deleteAccount = (req, res) => {
-  const user = req.user || users[0];
-  const uIdx = users.findIndex(u => u.id === user.id);
-  if (uIdx !== -1 && users.length > 1) {
-    users.splice(uIdx, 1);
-  }
-  
-  // Cleanup user favorites & chats
-  for (let i = favorites.length - 1; i >= 0; i--) {
-    if (favorites[i].userId === user.id) favorites.splice(i, 1);
-  }
-  for (let i = chatHistories.length - 1; i >= 0; i--) {
-    if (chatHistories[i].userId === user.id) chatHistories.splice(i, 1);
-  }
+exports.deleteAccount = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
 
-  res.json({
-    success: true,
-    message: 'Account deleted successfully'
-  });
+    // Delete related user data
+    await Promise.all([
+      Favorite.deleteMany({ userId }),
+      ChatHistory.deleteMany({ userId }),
+      User.findByIdAndDelete(userId)
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (err) {
+    next(err);
+  }
 };

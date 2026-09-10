@@ -9,7 +9,6 @@ import {
   Settings as SettingsIcon,
   Bell,
   Globe,
-  Info,
   Trash2,
   ChevronRight,
   ChevronDown,
@@ -17,15 +16,13 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  Mail,
-  ShieldCheck,
-  FileText,
-  HelpCircle
+  Mail
 } from 'lucide-react';
 import Sidebar from '../../src/components/layout/Sidebar';
 import TopNavbar from '../../src/components/layout/TopNavbar';
 import { useApp } from '../../src/Hooks/useAppContext';
 import { api } from '../../src/lib/api';
+import ProtectedRoute from '../../src/components/auth/ProtectedRoute';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -36,16 +33,6 @@ export default function SettingsPage() {
     setDefaultLocation,
     autoDetectLocation,
     setAutoDetectLocation,
-    temperatureUnit,
-    setTemperatureUnit,
-    windSpeedUnit,
-    setWindSpeedUnit,
-    pressureUnit,
-    setPressureUnit,
-    dateFormat,
-    setDateFormat,
-    timeFormat,
-    setTimeFormat,
     notificationSettings,
     setNotificationSettings,
     language,
@@ -79,8 +66,6 @@ export default function SettingsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const [activeInfoModal, setActiveInfoModal] = useState(null); // 'privacy', 'terms', 'help'
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -200,7 +185,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent flex text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-transparent flex text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* App Sidebar */}
       <Sidebar />
 
@@ -208,67 +194,59 @@ export default function SettingsPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <TopNavbar />
 
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {/* Top Settings Header Card */}
-          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 flex items-center justify-center text-white shadow-md shadow-slate-900/20 shrink-0">
-                <SettingsIcon className="w-6 h-6 text-white" />
+        <main className="flex-1 p-2.5 sm:p-4 lg:p-5 max-w-7xl w-full mx-auto space-y-3 sm:space-y-4 pb-20 lg:pb-8">
+          {/* Top Settings Header Card (Compact) */}
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-2.5 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-linear-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 flex items-center justify-center text-white shadow-sm shadow-slate-900/20 shrink-0">
+                <SettingsIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
                   {t('settings.title', 'Settings')}
                 </h1>
               </div>
             </div>
 
-            <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                <Link href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  {t('common.home', 'Home')}
-                </Link>
-                <span>/</span>
-                <span className="text-slate-800 dark:text-slate-200 font-semibold">{t('settings.title', 'Settings')}</span>
-              </div>
-            </div>
+            
           </div>
 
           {/* Toast Notification */}
           {toastMessage && (
-            <div className="fixed bottom-6 right-6 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-xl border border-slate-700/50 dark:border-slate-200 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <div className="fixed bottom-6 right-6 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3.5 py-2.5 rounded-xl shadow-xl border border-slate-700/50 dark:border-slate-200 flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
               <span className="text-xs font-semibold">{toastMessage}</span>
             </div>
           )}
 
-          {/* Settings Grid - Row 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            {/* Card 1: Account */}
-            <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
+          {/* Settings Grid - Row 1: Account & Location */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-start">
+            {/* Card 1: Account (Compact) */}
+            <div className="bg-white dark:bg-slate-900/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
               {/* Header */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
-                  <User className="w-5 h-5" />
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
+                  <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.account', 'Account')}</h2>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{t('settings.account', 'Account')}</h2>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                     {t('settings.accountDesc', 'Manage your account information.')}
                   </p>
                 </div>
               </div>
 
               {/* Profile Badge with Edit Button */}
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-slate-800 text-white font-bold text-base flex items-center justify-center shrink-0 shadow-xs">
+              <div className="mt-3.5 flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-xs">
                     {user?.avatar || (user?.name ? user.name.charAt(0).toUpperCase() : 'L')}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                       {user?.name}
                     </h3>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 truncate">
                       {user?.email}
                     </p>
                   </div>
@@ -282,14 +260,14 @@ export default function SettingsPage() {
                     });
                     setIsEditProfileOpen(true);
                   }}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all shrink-0 cursor-pointer shadow-2xs"
+                  className="px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-semibold bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all shrink-0 cursor-pointer shadow-2xs"
                 >
                   {t('settings.editProfile', 'Edit Profile')}
                 </button>
               </div>
 
               {/* Account Details Key-Value List */}
-              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80 space-y-3 text-xs">
+              <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 space-y-2 text-[11px] sm:text-xs">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-slate-600 dark:text-slate-400">{t('settings.name', 'Name')}</span>
                   <span className="font-medium text-slate-900 dark:text-white">{user?.name}</span>
@@ -301,16 +279,16 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Card 2: Location Preferences */}
-            <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
+            {/* Card 2: Location Preferences (Compact) */}
+            <div className="bg-white dark:bg-slate-900/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
               {/* Header */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
-                  <MapPin className="w-5 h-5" />
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
+                  <MapPin className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.locationPrefs', 'Location Preferences')}</h2>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{t('settings.locationPrefs', 'Location Preferences')}</h2>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                     {t('settings.locationPrefsDesc', 'Set your default location and manage saved places.')}
                   </p>
                 </div>
@@ -410,352 +388,212 @@ export default function SettingsPage() {
                       {t('settings.manageSavedDesc', 'View, edit or remove your saved locations.')}
                     </span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0" />
                 </Link>
-              </div>
-            </div>
-
-            {/* Card 3: Units & Format */}
-            <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
-              {/* Header */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
-                  <SettingsIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.unitsFormat', 'Units & Format')}</h2>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                    {t('settings.unitsFormatDesc', 'Choose your preferred units and display format.')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Unit Selectors */}
-              <div className="mt-4 space-y-2.5 text-xs">
-                {/* Temperature Unit */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{t('settings.tempUnit', 'Temperature Unit')}</span>
-                  <div className="relative">
-                    <select
-                      value={temperatureUnit === 'fahrenheit' ? 'Fahrenheit (°F)' : 'Celsius (°C)'}
-                      onChange={(e) => {
-                        const val = e.target.value.includes('Fahrenheit') ? 'fahrenheit' : 'celsius';
-                        setTemperatureUnit(val);
-                        showToast(`Temperature unit set to ${e.target.value}`);
-                      }}
-                      className="appearance-none pl-3 pr-8 py-1.5 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="Celsius (°C)">Celsius (°C)</option>
-                      <option value="Fahrenheit (°F)">Fahrenheit (°F)</option>
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Wind Speed Unit */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{t('settings.windUnit', 'Wind Speed Unit')}</span>
-                  <div className="relative">
-                    <select
-                      value={windSpeedUnit}
-                      onChange={(e) => {
-                        setWindSpeedUnit(e.target.value);
-                        showToast(`Wind speed unit set to ${e.target.value}`);
-                      }}
-                      className="appearance-none pl-3 pr-8 py-1.5 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="km/h">km/h</option>
-                      <option value="mph">mph</option>
-                      <option value="m/s">m/s</option>
-                      <option value="knots">knots</option>
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Pressure Unit */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{t('settings.pressureUnit', 'Pressure Unit')}</span>
-                  <div className="relative">
-                    <select
-                      value={pressureUnit}
-                      onChange={(e) => {
-                        setPressureUnit(e.target.value);
-                        showToast(`Pressure unit set to ${e.target.value}`);
-                      }}
-                      className="appearance-none pl-3 pr-8 py-1.5 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="hPa">hPa</option>
-                      <option value="mbar">mbar</option>
-                      <option value="inHg">inHg</option>
-                      <option value="mmHg">mmHg</option>
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Date Format */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{t('settings.dateFormat', 'Date Format')}</span>
-                  <div className="relative">
-                    <select
-                      value={dateFormat}
-                      onChange={(e) => {
-                        setDateFormat(e.target.value);
-                        showToast(`Date format set to ${e.target.value}`);
-                      }}
-                      className="appearance-none pl-3 pr-8 py-1.5 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="DD MMM YYYY">DD MMM YYYY</option>
-                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Time Format */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{t('settings.timeFormat', 'Time Format')}</span>
-                  <div className="relative">
-                    <select
-                      value={timeFormat}
-                      onChange={(e) => {
-                        setTimeFormat(e.target.value);
-                        showToast(`Time format set to ${e.target.value}`);
-                      }}
-                      className="appearance-none pl-3 pr-8 py-1.5 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="12-hour (AM/PM)">12-hour (AM/PM)</option>
-                      <option value="24-hour">24-hour</option>
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
           {/* Settings Grid - Row 2 (Notifications & stacked Language + About) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            {/* Card 4: Notifications (Spans 2 cols on lg for perfect symmetry) */}
-            <div className="lg:col-span-2 bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
+            {/* Card 4: Notifications (Compact) */}
+            <div className="lg:col-span-2 bg-white dark:bg-slate-900/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
               {/* Header */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
-                  <Bell className="w-5 h-5" />
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
+                  <Bell className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.notifications', 'Notifications')}</h2>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{t('settings.notifications', 'Notifications')}</h2>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                     {t('settings.notificationsDesc', 'Choose what updates you want to receive.')}
                   </p>
                 </div>
               </div>
 
               {/* Notification Toggle Rows in 2-column subgrid */}
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* Severe Weather Alerts */}
-                <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-xs font-semibold text-slate-900 dark:text-white block truncate">
+                <div className="flex items-center justify-between p-2.5 rounded-lg sm:rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">
                       {t('settings.severeAlerts', 'Severe Weather Alerts')}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">
-                      {t('settings.severeAlertsDesc', 'Get notified about extreme weather conditions.')}
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                      {t('settings.criticalAlertsDesc', 'Critical hazard warnings')}
                     </span>
                   </div>
                   <button
                     type="button"
                     role="switch"
-                    aria-checked={notificationSettings.severeAlerts}
-                    onClick={() => handleToggleNotification('severeAlerts')}
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
-                      notificationSettings.severeAlerts ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
+                    aria-checked={notificationSettings.severeWeatherAlerts}
+                    onClick={() => handleToggleNotification('severeWeatherAlerts')}
+                    className={`relative inline-flex h-4.5 w-8.5 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                      notificationSettings.severeWeatherAlerts ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
                     }`}
                   >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                        notificationSettings.severeAlerts ? 'translate-x-5' : 'translate-x-0'
+                    <span
+                      className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                        notificationSettings.severeWeatherAlerts ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
                 </div>
 
-                {/* Disaster News Updates */}
-                <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-xs font-semibold text-slate-900 dark:text-white block truncate">
-                      {t('settings.disasterNews', 'Disaster News Updates')}
+                {/* Daily Forecast */}
+                <div className="flex items-center justify-between p-2.5 rounded-lg sm:rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">
+                      {t('settings.dailyForecast', 'Daily Morning Forecast')}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">
-                      {t('settings.disasterNewsDesc', 'Receive latest news on natural disasters.')}
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                      {t('settings.morningSummaryDesc', 'Morning weather summary')}
                     </span>
                   </div>
                   <button
                     type="button"
                     role="switch"
-                    aria-checked={notificationSettings.disasterNews}
-                    onClick={() => handleToggleNotification('disasterNews')}
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
-                      notificationSettings.disasterNews ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
+                    aria-checked={notificationSettings.dailyForecast}
+                    onClick={() => handleToggleNotification('dailyForecast')}
+                    className={`relative inline-flex h-4.5 w-8.5 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                      notificationSettings.dailyForecast ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
                     }`}
                   >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                        notificationSettings.disasterNews ? 'translate-x-5' : 'translate-x-0'
+                    <span
+                      className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                        notificationSettings.dailyForecast ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
                 </div>
 
-                {/* Daily Weather Summary */}
-                <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-xs font-semibold text-slate-900 dark:text-white block truncate">
-                      {t('settings.dailySummary', 'Daily Weather Summary')}
+                {/* Rain Warning */}
+                <div className="flex items-center justify-between p-2.5 rounded-lg sm:rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">
+                      {t('settings.rainWarnings', 'Precipitation Warnings')}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">
-                      {t('settings.dailySummaryDesc', 'Get a daily summary for your saved locations.')}
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                      {t('settings.rainWarningsDesc', 'Upcoming rain alerts')}
                     </span>
                   </div>
                   <button
                     type="button"
                     role="switch"
-                    aria-checked={notificationSettings.dailySummary}
-                    onClick={() => handleToggleNotification('dailySummary')}
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
-                      notificationSettings.dailySummary ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
+                    aria-checked={notificationSettings.rainWarnings}
+                    onClick={() => handleToggleNotification('rainWarnings')}
+                    className={`relative inline-flex h-4.5 w-8.5 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                      notificationSettings.rainWarnings ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
                     }`}
                   >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                        notificationSettings.dailySummary ? 'translate-x-5' : 'translate-x-0'
+                    <span
+                      className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                        notificationSettings.rainWarnings ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
                 </div>
 
-                {/* App Updates */}
-                <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5 min-w-0">
-                    <span className="text-xs font-semibold text-slate-900 dark:text-white block truncate">
-                      {t('settings.appUpdates', 'App Updates')}
+                {/* Air Quality Index Alert */}
+                <div className="flex items-center justify-between p-2.5 rounded-lg sm:rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">
+                      {t('settings.aqiAlerts', 'Air Quality Alerts')}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">
-                      {t('settings.appUpdatesDesc', 'Receive important updates about new features.')}
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                      {t('settings.aqiAlertsDesc', 'Poor AQI notifications')}
                     </span>
                   </div>
                   <button
                     type="button"
                     role="switch"
-                    aria-checked={notificationSettings.appUpdates}
-                    onClick={() => handleToggleNotification('appUpdates')}
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
-                      notificationSettings.appUpdates ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
+                    aria-checked={notificationSettings.airQualityAlerts}
+                    onClick={() => handleToggleNotification('airQualityAlerts')}
+                    className={`relative inline-flex h-4.5 w-8.5 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                      notificationSettings.airQualityAlerts ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'
                     }`}
                   >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                        notificationSettings.appUpdates ? 'translate-x-5' : 'translate-x-0'
+                    <span
+                      className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                        notificationSettings.airQualityAlerts ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
+                </div>
+              </div>
+
+              {/* Sub-channel Preferences: Email & Push */}
+              <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] sm:text-xs">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {t('settings.deliveryChannels', 'Delivery Channels')}
+                </span>
+
+                <div className="flex items-center gap-4">
+                  {/* Push Notifications Toggle */}
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={notificationSettings.pushNotifications}
+                      onChange={() => handleToggleNotification('pushNotifications')}
+                      className="rounded-sm border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-3 h-3"
+                    />
+                    <span className="font-medium text-slate-600 dark:text-slate-400">Push</span>
+                  </label>
+
+                  {/* Email Notifications Toggle */}
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={notificationSettings.emailNotifications}
+                      onChange={() => handleToggleNotification('emailNotifications')}
+                      className="rounded-sm border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-3 h-3"
+                    />
+                    <span className="font-medium text-slate-600 dark:text-slate-400">Email</span>
+                  </label>
                 </div>
               </div>
             </div>
 
-            {/* Column 3: Language & About stacked */}
-            <div className="space-y-6">
-              {/* Card 5: Language */}
-              <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
-                {/* Header */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.language', 'Language')}</h2>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                      {t('settings.languageDesc', 'Select your preferred language.')}
-                    </p>
-                  </div>
+            {/* Card 4: Language (Compact) */}
+            <div className="bg-white dark:bg-slate-900/90 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
+              {/* Header */}
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
+                  <Globe className="w-4 h-4" />
                 </div>
-
-                {/* Language Select Dropdown */}
-                <div className="mt-4 relative">
-                  <select
-                    value={language}
-                    onChange={(e) => {
-                      setLanguage(e.target.value);
-                      showToast(`Language set to ${e.target.value}`);
-                    }}
-                    className="w-full appearance-none pl-3.5 pr-8 py-2 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
-                  >
-                    <option value="English">English</option>
-                    <option value="Hindi (हिन्दी)">Hindi (हिन्दी)</option>
-                    <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
-                    <option value="Spanish (Español)">Spanish (Español)</option>
-                    <option value="French (Français)">French (Français)</option>
-                    <option value="German (Deutsch)">German (Deutsch)</option>
-                    <option value="Japanese (日本語)">Japanese (日本語)</option>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <div>
+                  <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{t('settings.language', 'Language')}</h2>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    {t('settings.languageDesc', 'Select your preferred language.')}
+                  </p>
                 </div>
               </div>
 
-              {/* Card 6: About */}
-              <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs h-fit">
-                {/* Header */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700/50">
-                    <Info className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t('settings.about', 'About')}</h2>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                      {t('settings.aboutDesc', 'App information and support.')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* About List */}
-                <div className="mt-4 space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between py-1">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">{t('settings.appVersion', 'App Version')}</span>
-                    <span className="font-medium text-slate-500 dark:text-slate-400">v1.0.0</span>
-                  </div>
-
-                  <button
-                    onClick={() => setActiveInfoModal('privacy')}
-                    className="w-full flex items-center justify-between py-1 hover:text-blue-600 dark:hover:text-blue-400 text-slate-700 dark:text-slate-300 group cursor-pointer transition-colors"
-                  >
-                    <span className="font-semibold">{t('settings.privacyPolicy', 'Privacy Policy')}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-
-                  <button
-                    onClick={() => setActiveInfoModal('terms')}
-                    className="w-full flex items-center justify-between py-1 hover:text-blue-600 dark:hover:text-blue-400 text-slate-700 dark:text-slate-300 group cursor-pointer transition-colors"
-                  >
-                    <span className="font-semibold">{t('settings.termsOfService', 'Terms of Service')}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-
-                  <button
-                    onClick={() => setActiveInfoModal('help')}
-                    className="w-full flex items-center justify-between py-1 hover:text-blue-600 dark:hover:text-blue-400 text-slate-700 dark:text-slate-300 group cursor-pointer transition-colors"
-                  >
-                    <span className="font-semibold">{t('settings.helpSupport', 'Help & Support')}</span>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                </div>
+              {/* Language Select Dropdown */}
+              <div className="mt-3 relative">
+                <select
+                  value={language}
+                  onChange={(e) => {
+                    setLanguage(e.target.value);
+                    showToast(`Language set to ${e.target.value}`);
+                  }}
+                  className="w-full appearance-none pl-3 pr-7 py-1.5 bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="English">English</option>
+                  <option value="Hindi (हिन्दी)">Hindi (हिन्दी)</option>
+                  <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Spanish (Español)">Spanish (Español)</option>
+                  <option value="French (Français)">French (Français)</option>
+                  <option value="German (Deutsch)">German (Deutsch)</option>
+                  <option value="Japanese (日本語)">Japanese (日本語)</option>
+                </select>
+                <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* Card 7: Delete Account (Full-width banner) */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/50 shrink-0">
                 <Trash2 className="w-5 h-5" />
@@ -914,79 +752,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* MODAL 3: PRIVACY / TERMS / HELP INFO MODALS */}
-      {/* ========================================================= */}
-      {activeInfoModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600">
-                  {activeInfoModal === 'privacy' && <ShieldCheck className="w-5 h-5" />}
-                  {activeInfoModal === 'terms' && <FileText className="w-5 h-5" />}
-                  {activeInfoModal === 'help' && <HelpCircle className="w-5 h-5" />}
-                </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white capitalize">
-                  {activeInfoModal === 'privacy' && t('settings.privacyPolicy', 'Privacy Policy')}
-                  {activeInfoModal === 'terms' && t('settings.termsOfService', 'Terms of Service')}
-                  {activeInfoModal === 'help' && t('settings.helpSupport', 'Help & Support')}
-                </h3>
-              </div>
-              <button
-                onClick={() => setActiveInfoModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="text-xs text-slate-600 dark:text-slate-400 space-y-3 max-h-64 overflow-y-auto pr-1">
-              {activeInfoModal === 'privacy' && (
-                <>
-                  <p>
-                    WeatherWise respects your personal privacy. We only use geolocation data locally to deliver real-time atmospheric telemetry and severe weather safety advisories.
-                  </p>
-                  <p>
-                    Your saved locations and configuration settings are stored on your device and never sold or shared with third-party advertising networks.
-                  </p>
-                </>
-              )}
-              {activeInfoModal === 'terms' && (
-                <>
-                  <p>
-                    By using WeatherWise, you acknowledge that weather telemetry and natural disaster alerts are sourced from international meteorology providers (WeatherAPI, USGS, GDELT).
-                  </p>
-                  <p>
-                    In life-threatening emergency situations, always consult local civil defense and disaster response authorities.
-                  </p>
-                </>
-              )}
-              {activeInfoModal === 'help' && (
-                <>
-                  <p>
-                    Have questions or need assistance with your WeatherWise dashboard?
-                  </p>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-1.5 font-medium text-slate-800 dark:text-slate-200">
-                    <p>📧 Email: support@weatherwise.ai</p>
-                    <p>🌐 Documentation: docs.weatherwise.ai</p>
-                    <p>⚡ Response Time: Within 24 hours</p>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setActiveInfoModal(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm cursor-pointer"
-              >
-                {t('common.close', 'Close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

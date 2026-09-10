@@ -1,5 +1,30 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000/api';
-const WEATHER_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY || 'a5a4f8e5c8544a76b0872757260909';
+const WEATHER_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+
+export const TOKEN_KEY = 'weatherwise_token';
+
+export function getAuthToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setAuthToken(token) {
+  if (typeof window === 'undefined') return;
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export function getAuthHeaders() {
+  const token = getAuthToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 // Decode condition text to icon key
 export function getConditionIcon(text = '') {
@@ -16,16 +41,16 @@ export function getConditionIcon(text = '') {
 const NEWSDATA_KEY = process.env.NEXT_PUBLIC_NEWSDATA_API_KEY || 'pub_92ebde5a4f7b49388cfa21ddb8baaf03';
 
 const DISASTER_IMAGES = {
-  earthquake: 'https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=600&q=80',
-  flood: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?w=600&q=80',
-  cyclone: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=600&q=80',
-  hurricane: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&q=80',
-  tsunami: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=600&q=80',
-  wildfire: 'https://images.unsplash.com/photo-1602980085566-48bc17882234?w=600&q=80',
-  landslide: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80',
-  drought: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&q=80',
-  volcano: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=80',
-  storm: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=600&q=80'
+  earthquake: 'https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=800&q=80',
+  flood: 'https://images.unsplash.com/photo-1514632595-4944383f2737?w=800&q=80',
+  cyclone: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80',
+  hurricane: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80',
+  tsunami: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
+  wildfire: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
+  landslide: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
+  drought: 'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80',
+  volcano: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
+  storm: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&q=80'
 };
 
 function calculateAqi(pm25 = 12) {
@@ -263,7 +288,9 @@ export const api = {
 
   async getFavorites() {
     try {
-      const res = await fetch(`${API_BASE}/favorites`);
+      const res = await fetch(`${API_BASE}/favorites`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const json = await res.json();
         return json.data || [];
@@ -278,7 +305,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/favorites/toggle`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ city, country, temp, condition })
       });
       if (res.ok) {
@@ -550,7 +577,9 @@ export const api = {
 
   async getChatHistory() {
     try {
-      const res = await fetch(`${API_BASE}/chat/history`);
+      const res = await fetch(`${API_BASE}/chat/history`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const json = await res.json();
         return json.data || [];
@@ -565,7 +594,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/chat/message`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ message })
       });
       if (res.ok) {
@@ -580,18 +609,108 @@ export const api = {
 
   async clearChatHistory() {
     try {
-      await fetch(`${API_BASE}/chat/history`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/chat/history`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
     } catch {
       // Error
     }
   },
 
-  async getUserProfile() {
+  async register({ name, email, password, confirmPassword }) {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, confirmPassword })
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.message || 'Registration failed');
+    }
+    if (json.token) {
+      setAuthToken(json.token);
+    }
+    return json;
+  },
+
+  async login({ email, password }) {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.message || 'Login failed');
+    }
+    if (json.token) {
+      setAuthToken(json.token);
+    }
+    return json;
+  },
+
+  async logout() {
     try {
-      const res = await fetch(`${API_BASE}/auth/me`);
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      setAuthToken(null);
+    }
+  },
+
+  async getUserProfile() {
+    const token = getAuthToken();
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const json = await res.json();
         return json.user || null;
+      } else if (res.status === 401) {
+        setAuthToken(null);
+      }
+    } catch {
+      // Error
+    }
+    return null;
+  },
+
+  async getPreferences() {
+    const token = getAuthToken();
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_BASE}/user/preferences`, {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || null;
+      }
+    } catch {
+      // Error
+    }
+    return null;
+  },
+
+  async updatePreferences(preferences) {
+    const token = getAuthToken();
+    if (!token) return null;
+    try {
+      const res = await fetch(`${API_BASE}/user/preferences`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(preferences)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.data || null;
       }
     } catch {
       // Error

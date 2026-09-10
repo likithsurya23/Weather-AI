@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const favoritesController = require('../controller/favoritesController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { requireAuth } = require('../middleware/authMiddleware');
 
-router.get('/', authMiddleware, favoritesController.getFavorites);
-router.post('/', authMiddleware, favoritesController.addFavorite);
-router.post('/toggle', authMiddleware, favoritesController.toggleFavorite);
-router.delete('/:id', authMiddleware, favoritesController.removeFavorite);
+router.use(requireAuth);
+
+router.get('/', favoritesController.getFavorites);
+router.post('/', favoritesController.addFavorite);
+router.post('/toggle', favoritesController.toggleFavorite);
+router.delete('/:id', favoritesController.removeFavorite);
 
 module.exports = router;

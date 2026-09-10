@@ -1,41 +1,33 @@
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 
-let db = null;
-let client = null;
 let isConnected = false;
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    console.log('[Database] No MONGODB_URI provided in .env. Using built-in persistent in-memory store.');
+    console.warn('[Database] Warning: No MONGODB_URI found in .env');
     return null;
   }
 
   try {
-    client = new MongoClient(uri, { serverSelectionTimeoutMS: 3000 });
-    await client.connect();
-    db = client.db();
+    const conn = await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+    });
     isConnected = true;
-    console.log('[Database] Connected to MongoDB successfully.');
-    return db;
+    console.log(`[Database] MongoDB Atlas Connected: ${conn.connection.host}/${conn.connection.name}`);
+    return conn;
   } catch (error) {
-    console.warn('[Database] MongoDB connection failed:', error.message);
-    console.log('[Database] Falling back to high-performance in-memory store.');
+    console.error('[Database] MongoDB Atlas Connection Error:', error.message);
     isConnected = false;
-    return null;
+    throw error;
   }
 }
 
-function getDB() {
-  return db;
-}
-
 function isDBConnected() {
-  return isConnected;
+  return isConnected && mongoose.connection.readyState === 1;
 }
 
 module.exports = {
   connectDB,
-  getDB,
   isDBConnected
 };

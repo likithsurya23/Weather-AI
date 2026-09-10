@@ -1,3 +1,4 @@
+const Alert = require('../models/Alert');
 const API_KEY = process.env.WEATHER_API_KEY || 'a5a4f8e5c8544a76b0872757260909';
 
 // Monitored cities for active global weather alerts
@@ -6,8 +7,31 @@ const monitoredCities = ['Bengaluru', 'Dubai', 'London', 'Tokyo', 'New York'];
 exports.getAlerts = async (req, res, next) => {
   try {
     const liveAlerts = [];
+    const userId = req.user?._id;
 
-    // Query live forecasts with alerts=yes for monitored cities
+    // 1. Fetch any custom user-specific alerts from MongoDB
+    if (userId) {
+      const dbAlerts = await Alert.find({
+        $or: [{ userId }, { userId: null }],
+        active: true,
+        dismissedBy: { $ne: userId }
+      }).sort({ createdAt: -1 });
+
+      dbAlerts.forEach((da) => {
+        liveAlerts.push({
+          id: da._id.toString(),
+          _id: da._id.toString(),
+          title: da.title,
+          location: da.location,
+          severity: da.severity,
+          description: da.description,
+          timestamp: da.timestamp,
+          active: da.active
+        });
+      });
+    }
+
+    // 2. Query live forecasts with alerts=yes for monitored cities
     await Promise.all(
       monitoredCities.map(async (city) => {
         try {
@@ -20,7 +44,7 @@ exports.getAlerts = async (req, res, next) => {
             const fday = data.forecast?.forecastday?.[0];
             const govAlerts = data.alerts?.alert || [];
 
-            // 1. Check for official meteorological agency alerts
+            // Government alerts
             if (govAlerts.length > 0) {
               govAlerts.forEach((ga, idx) => {
                 liveAlerts.push({
@@ -35,7 +59,7 @@ exports.getAlerts = async (req, res, next) => {
               });
             }
 
-            // 2. Derive real-time telemetry advisories based on live API parameters
+            // Real-time telemetry advisories
             const rainChance = fday?.day?.daily_chance_of_rain || 0;
             const temp = Math.round(curr.temp_c);
             const wind = Math.round(curr.wind_kph);
@@ -95,7 +119,6 @@ exports.getAlerts = async (req, res, next) => {
       })
     );
 
-    // If no extreme conditions, provide real telemetry summary alert
     if (liveAlerts.length === 0) {
       liveAlerts.push({
         id: 'alt_calm_1',
@@ -117,17 +140,35 @@ exports.getAlerts = async (req, res, next) => {
   }
 };
 
-exports.dismissAlert = (req, res) => {
-  res.json({ success: true, message: 'Alert acknowledged' });
+exports.dismissAlert = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id;
+
+    if (userId && id.match(/^[0-9a-fA-F]{24}$/)) {
+      await Alert.findByIdAndUpdate(id, {
+        $addToSet: { dismissedBy: userId }
+      });
+    }
+
+    res.json({ success: true, message: 'Alert acknowledged' });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.updateSettings = (req, res) => {
-  const user = req.user;
-  if (user && user.preferences) {
-    const { weatherAlerts, weeklySummary, marketingUpdates } = req.body;
-    if (weatherAlerts !== undefined) user.preferences.weatherAlerts = weatherAlerts;
-    if (weeklySummary !== undefined) user.preferences.weeklySummary = weeklySummary;
-    if (marketingUpdates !== undefined) user.preferences.marketingUpdates = marketingUpdates;
+exports.updateSettings = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user && user.preferences) {
+      const { weatherAlerts, weeklySummary, marketingUpdates } = req.body;
+      if (weatherAlerts !== undefined) user.preferences.weatherAlerts = weatherAlerts;
+      if (weeklySummary !== undefined) user.preferences.weeklySummary = weeklySummary;
+      if (marketingUpdates !== undefined) user.preferences.marketingUpdates = marketingUpdates;
+      await user.save();
+    }
+    res.json({ success: true, message: 'Alert preferences updated' });
+  } catch (err) {
+    next(err);
   }
-  res.json({ success: true, message: 'Alert preferences updated' });
 };
