@@ -2,7 +2,8 @@
   "name": "w-backend",
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -11,6 +12,7 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.6.0",
-    "mongoose": "^9.9.5"
+    "mongoose": "^9.9.5",
+    "nodemon": "^3.1.14"
   }
 }

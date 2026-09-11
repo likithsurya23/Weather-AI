@@ -14,11 +14,27 @@ const userRouter = require('./routers/userRouter');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const clientUrl = process.env.Client_URL || process.env.CLIENT_URL;
+const allowedOrigins = [
+  clientUrl,
+  'https://weather---ai.vercel.app',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+].filter(Boolean);
+
 // Middleware
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
 
@@ -58,10 +74,8 @@ app.use(errorHandler);
 async function startServer() {
   await connectDB();
   app.listen(PORT, () => {
-    console.log(`========================================`);
-    console.log(` WeatherWise Backend running on port ${PORT}`);
-    console.log(` Health check: http://localhost:${PORT}/api/health`);
-    console.log(`========================================`);
+    console.log(` Server running on port ${PORT}`);
+    console.log(` Local: http://localhost:${PORT}`);
   });
 }
 
