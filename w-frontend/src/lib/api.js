@@ -575,27 +575,30 @@ export const api = {
     return unique;
   },
 
-  async getChatHistory() {
+  async getChatHistory(language = 'English') {
     try {
-      const res = await fetch(`${API_BASE}/chat/history`, {
+      const res = await fetch(`${API_BASE}/chat/history?language=${encodeURIComponent(language)}`, {
         headers: getAuthHeaders()
       });
       if (res.ok) {
         const json = await res.json();
-        return json.data || [];
+        return {
+          data: json.data || [],
+          suggestions: json.suggestions || []
+        };
       }
     } catch {
       // Error
     }
-    return [];
+    return { data: [], suggestions: [] };
   },
 
-  async sendChatMessage(message) {
+  async sendChatMessage(message, language = 'English', currentCity = '') {
     try {
       const res = await fetch(`${API_BASE}/chat/message`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ message, language, currentCity })
       });
       if (res.ok) {
         const json = await res.json();
@@ -716,5 +719,44 @@ export const api = {
       // Error
     }
     return null;
+  },
+
+  async updateProfile(data) {
+    const token = getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(`${API_BASE}/auth/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to update profile');
+    return json;
+  },
+
+  async changePassword(currentPassword, newPassword) {
+    const token = getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(`${API_BASE}/auth/change-password`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to change password');
+    return json;
+  },
+
+  async deleteAccount() {
+    const token = getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(`${API_BASE}/user/account`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to delete account');
+    setAuthToken(null);
+    return json;
   }
 };

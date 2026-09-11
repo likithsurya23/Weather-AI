@@ -14,7 +14,8 @@ import {
   LogOut,
   LogIn,
   X,
-  Menu
+  Menu,
+  Info
 } from 'lucide-react';
 
 import { useApp } from '../../Hooks/useAppContext';
@@ -31,7 +32,8 @@ export default function Sidebar() {
     { key: 'nav.alerts', defaultName: 'Disaster News', href: '/alerts', icon: Newspaper },
     { key: 'nav.chat', defaultName: 'AI Assistant', href: '/chat', icon: Bot },
     { key: 'nav.favorites', defaultName: 'Saved Locations', href: '/favorites', icon: MapPin },
-    { key: 'nav.settings', defaultName: 'Settings', href: '/settings', icon: Settings }
+    { key: 'nav.settings', defaultName: 'Settings', href: '/settings', icon: Settings },
+    { key: 'nav.about', defaultName: 'About', href: '/about', icon: Info, mobileOnly: true }
   ];
 
   const handleLogout = async () => {
@@ -44,30 +46,33 @@ export default function Sidebar() {
     if (setMobileMenuOpen) setMobileMenuOpen(false);
   };
 
-  const renderNavLinks = () => (
-    <nav className="mt-2 space-y-0.5">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
-        const label = t ? t(item.key, item.defaultName) : item.defaultName;
-        return (
-          <Link
-            key={item.key}
-            href={item.href}
-            onClick={closeMobile}
-            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl font-medium text-xs transition-all ${
-              isActive
-                ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
-            <span className="truncate">{label}</span>
-          </Link>
-        );
-      })}
-    </nav>
-  );
+  const renderNavLinks = (isMobile = false) => {
+    const items = navItems.filter((item) => !item.mobileOnly || isMobile);
+    return (
+      <nav className="mt-2 space-y-0.5">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
+          const label = t ? t(item.key, item.defaultName) : item.defaultName;
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              onClick={closeMobile}
+              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl font-medium text-xs transition-all ${
+                isActive
+                  ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+              <span className="truncate">{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  };
 
   return (
     <>
@@ -87,7 +92,7 @@ export default function Sidebar() {
             </div>
           </Link>
 
-          {renderNavLinks()}
+          {renderNavLinks(false)}
         </div>
 
         {/* Bottom Auth Section */}
@@ -146,7 +151,7 @@ export default function Sidebar() {
                 </button>
               </div>
 
-              {renderNavLinks()}
+              {renderNavLinks(true)}
             </div>
 
             {/* Drawer Bottom Auth */}
