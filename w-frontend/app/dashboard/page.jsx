@@ -19,7 +19,6 @@ import {
   Leaf,
   Map,
   Plus,
-  Minus,
   AlertTriangle,
   Bell,
   Bookmark,
@@ -36,6 +35,8 @@ import { useApp } from '../../src/Hooks/useAppContext';
 import { api } from '../../src/lib/api';
 import { formatDegree, formatTemp, formatTempNumber } from '../../src/lib/weatherUtils';
 import ProtectedRoute from '../../src/components/auth/ProtectedRoute';
+import WeatherRadarSatelliteMap from '../../src/components/map/WeatherRadarSatelliteMap';
+import { findMatchingCities } from '../../src/lib/citiesData';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -45,8 +46,6 @@ export default function DashboardPage() {
   const [news, setNews] = useState([]);
   const [loadingNews, setLoadingNews] = useState(true);
   const [hoveredTrendPoint, setHoveredTrendPoint] = useState(null);
-  const [selectedMapLayer, setSelectedMapLayer] = useState('temperature');
-  const [mapZoomLevel, setMapZoomLevel] = useState(1);
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
@@ -97,8 +96,8 @@ export default function DashboardPage() {
   // -------------------------------------------------------------
   // LIVE CURRENT WEATHER METRICS
   // -------------------------------------------------------------
-  const city = weather?.city || currentCity;
-  const country = weather?.country;
+  const city = weather?.city || currentCity || 'Mysore';
+  const country = weather?.country || 'India';
   const rawTemp = weather?.temp !== undefined ? Math.round(weather.temp) : 24;
   const condition = weather?.condition || 'Clear';
   const rawFeelsLike = weather?.feelsLike !== undefined ? Math.round(weather.feelsLike) : rawTemp;
@@ -215,16 +214,6 @@ export default function DashboardPage() {
   const aqiStrokeDashoffset = aqiCircumference - aqiPercentage * aqiCircumference;
   const aqiColor = aqiVal <= 50 ? '#10B981' : aqiVal <= 100 ? '#F59E0B' : '#EF4444';
 
-  // -------------------------------------------------------------
-  // WEATHER MAP LAYERS
-  // -------------------------------------------------------------
-  const mapLayers = [
-    { id: 'temperature', label: 'Temperature' },
-    { id: 'rainfall', label: 'Rainfall' },
-    { id: 'wind', label: 'Wind' },
-    { id: 'cloud_cover', label: 'Cloud Cover' },
-    { id: 'air_quality', label: 'Air Quality' },
-  ];
 
   // -------------------------------------------------------------
   // LIVE ALERTS DATA
@@ -254,6 +243,49 @@ export default function DashboardPage() {
       router.push('/chat');
     }
   };
+
+  const handleLocationSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    const q = val.trim();
+    if (!q) {
+      setSearchResults([]);
+    } else {
+      const local = findMatchingCities(q, 6);
+      setSearchResults(local);
+    }
+  };
+
+  // Live autocomplete remote debounced lookup in Add Location modal
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) return;
+
+    // Debounced remote lookup
+    const timer = setTimeout(async () => {
+      try {
+        const remote = await api.searchLocations(q);
+        if (remote && remote.length > 0) {
+          setSearchResults((prev) => {
+            const seen = new Set(prev.map((p) => `${p.name.toLowerCase()}-${(p.country || '').toLowerCase()}`));
+            const merged = [...prev];
+            for (const r of remote) {
+              const key = `${r.name.toLowerCase()}-${(r.country || '').toLowerCase()}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                merged.push(r);
+              }
+            }
+            return merged.slice(0, 8);
+          });
+        }
+      } catch {
+        // Fallback to local
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleSearchModalSubmit = async (e) => {
     e?.preventDefault();
@@ -578,135 +610,48 @@ export default function DashboardPage() {
 
               </div>
 
-              {/* Row 3: 5. Weather Map Card (Compact) */}
-              <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-                <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-100">
+              {/* Row 3: 5. Weather Radar & Satellite Map Card */}
+              <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
+                <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Map className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                      <Map className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-                        {t('map.title', 'Weather Map')}
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                        Weather Radar & Satellite Map
                       </h3>
                       <p className="text-[10px] sm:text-[11px] text-slate-400 font-normal">
-                        {t('dash.realtimeTelemetry', 'Live weather conditions')} ({city})
+                        Live Doppler radar, precipitation sweeps & satellite imagery ({city})
                       </p>
                     </div>
                   </div>
 
                   <Link
                     href="/map"
-                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <span>{t('dash.viewFullMap', 'View Full Map')}</span>
                     <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2.5 sm:pt-3 items-center">
-                  <div className="md:col-span-8 h-40 sm:h-52 md:h-56 rounded-xl bg-slate-100/80 border border-slate-200/80 relative overflow-hidden flex items-center justify-center select-none">
-                    <div
-                      className="w-full h-full relative transition-transform duration-300 ease-out"
-                      style={{ transform: `scale(${mapZoomLevel})` }}
-                    >
-                      <svg viewBox="0 0 500 350" className="w-full h-full object-cover opacity-90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="500" height="350" fill="#E2E8F0" fillOpacity="0.4" />
-                        <path
-                          d="M140 40 L210 30 L270 45 L320 80 L380 90 L420 130 L390 180 L350 210 L300 280 L270 320 L250 340 L240 310 L210 260 L180 210 L150 160 L120 130 L110 90 Z"
-                          fill="#CBD5E1"
-                          stroke="#94A3B8"
-                          strokeWidth="1.5"
-                          strokeLinejoin="round"
-                        />
-                        <path d="M285 300 C295 300 300 315 295 325 C290 330 280 325 280 315 Z" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="1.5" />
-                        <path d="M120 220 Q160 230 180 260" stroke="#94A3B8" strokeWidth="0.8" strokeDasharray="3 3" />
-                        <path d="M330 200 Q360 230 380 250" stroke="#94A3B8" strokeWidth="0.8" strokeDasharray="3 3" />
-                      </svg>
-
-                      {selectedMapLayer === 'temperature' && (
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute top-1/4 left-1/3 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl animate-pulse" />
-                          <div className="absolute bottom-1/3 right-1/4 w-36 h-36 bg-red-400/15 rounded-full blur-2xl" />
-                        </div>
-                      )}
-                      {selectedMapLayer === 'rainfall' && (
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute top-1/3 left-1/3 w-36 h-36 bg-blue-500/25 rounded-full blur-2xl" />
-                          <div className="absolute bottom-1/4 left-1/2 w-28 h-28 bg-blue-600/30 rounded-full blur-2xl" />
-                        </div>
-                      )}
-                      {selectedMapLayer === 'wind' && (
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute top-1/2 left-1/4 w-48 h-24 bg-cyan-400/20 rounded-full blur-xl" />
-                        </div>
-                      )}
-                      {selectedMapLayer === 'air_quality' && (
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute top-1/3 left-1/3 w-36 h-36 bg-emerald-400/20 rounded-full blur-2xl" />
-                        </div>
-                      )}
-
-                      <div className="absolute top-16 left-28 text-white/90 drop-shadow-md">
-                        <Cloud className="w-8 h-8 fill-white/80 text-white" />
-                      </div>
-                      <div className="absolute top-24 right-20 text-white/90 drop-shadow-md">
-                        <Cloud className="w-9 h-9 fill-white/80 text-white" />
-                      </div>
-                      <div className="absolute top-28 left-48 text-blue-500 drop-shadow-md">
-                        <CloudRain className="w-8 h-8 fill-white/90 text-blue-400" />
-                      </div>
-                      <div className="absolute bottom-12 right-32 text-white/90 drop-shadow-md">
-                        <Cloud className="w-7 h-7 fill-white/70 text-white" />
-                      </div>
-
-                      <div className="absolute top-[68%] left-[45%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                        <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md ring-3 ring-blue-500/30 animate-bounce" style={{ animationDuration: '2.5s' }}>
-                          <MapPin className="w-3.5 h-3.5 fill-white text-blue-600" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-2.5 left-2.5 flex flex-col bg-white rounded-lg shadow-xs border border-slate-200 overflow-hidden z-10">
-                      <button
-                        onClick={() => setMapZoomLevel((prev) => Math.min(prev + 0.15, 1.4))}
-                        className="p-1 hover:bg-slate-50 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
-                        title={t('map.zoomIn', 'Zoom In')}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => setMapZoomLevel((prev) => Math.max(prev - 0.15, 0.8))}
-                        className="p-1 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
-                        title={t('map.zoomOut', 'Zoom Out')}
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-4 space-y-1.5 pl-1">
-                    {mapLayers.map((layer) => {
-                      const isSelected = selectedMapLayer === layer.id;
-                      return (
-                        <button
-                          key={layer.id}
-                          onClick={() => setSelectedMapLayer(layer.id)}
-                          className="w-full flex items-center gap-2.5 text-left py-0.5 text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer group"
-                        >
-                          <div
-                            className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-400 group-hover:border-blue-500 bg-transparent'
-                              }`}
-                          >
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                          </div>
-                          <span className={isSelected ? 'font-semibold text-slate-900' : 'text-slate-600'}>
-                            {layer.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="pt-2.5 sm:pt-3">
+                  <WeatherRadarSatelliteMap
+                    city={city}
+                    country={country}
+                    lat={weather?.lat}
+                    lon={weather?.lon}
+                    temp={rawTemp}
+                    condition={condition}
+                    windSpeed={windSpeed}
+                    windDir={weather?.windDir || 'NE'}
+                    humidity={humidity}
+                    rainProbability={weather?.rainProbability || 20}
+                    temperatureUnit={temperatureUnit}
+                    heightClass="h-56 sm:h-64 md:h-72"
+                    showFullMapLink={true}
+                  />
                 </div>
               </div>
 
@@ -955,7 +900,7 @@ export default function DashboardPage() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleLocationSearchChange}
                     placeholder="Enter city or region name..."
                     className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-blue-500 font-medium"
                   />

@@ -14,16 +14,16 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true);
 
   // Location & Weather state
-  const [currentCity, setCurrentCity] = useState('');
+  const [currentCity, setCurrentCity] = useState('Mysore');
   const [currentLocationDetails, setCurrentLocationDetails] = useState({
-    city: 'Detecting Location...',
-    country: '',
-    region: ''
+    city: 'Mysore',
+    country: 'India',
+    region: 'Karnataka'
   });
 
-  const [defaultLocation, setDefaultLocation] = useState('Bengaluru, Karnataka');
-  const [autoDetectLocation, setAutoDetectLocation] = useState(true);
-  const [isLiveLocation, setIsLiveLocation] = useState(true);
+  const [defaultLocation, setDefaultLocation] = useState('Mysore, Karnataka');
+  const [autoDetectLocation, setAutoDetectLocation] = useState(false);
+  const [isLiveLocation, setIsLiveLocation] = useState(false);
   const [isSyncingLocation, setIsSyncingLocation] = useState(false);
   const [deviceLocationName, setDeviceLocationName] = useState('');
 
@@ -222,6 +222,24 @@ export function AppProvider({ children }) {
     };
 
     const fallbackToIp = async () => {
+      // 1. High-precision IP geolocation via ipwho.is (resolves true ISP city & lat/lon)
+      try {
+        const ipRes = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(5000) });
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          if (ipData.success && ipData.latitude && ipData.longitude) {
+            const data = await api.getWeather(null, ipData.latitude, ipData.longitude);
+            if (data) {
+              applyWeather(data);
+              return true;
+            }
+          }
+        }
+      } catch {
+        // Fall through to WeatherAPI auto:ip
+      }
+
+      // 2. Secondary fallback to WeatherAPI auto:ip
       try {
         const data = await api.getWeather('auto:ip');
         if (data) {
@@ -234,52 +252,49 @@ export function AppProvider({ children }) {
       return false;
     };
 
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            const { latitude, longitude } = pos.coords;
-            const data = await api.getWeather(null, latitude, longitude);
-            if (data) {
-              applyWeather(data);
-            } else {
-              await fallbackToIp();
-            }
-          } catch {
-            await fallbackToIp();
-          }
-        },
-        async () => {
-          // GPS denied or unavailable -> use IP location seamlessly!
-          const ok = await fallbackToIp();
-          if (!ok && isInitial) {
-            const fallback = await api.getWeather('Bengaluru');
-            applyWeather(fallback);
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 6000,
-          maximumAge: 60000
+    // Helper for browser geolocation with dual-stage fallback
+    const tryGetPosition = () => {
+      return new Promise((resolve, reject) => {
+        if (typeof window === 'undefined' || !navigator.geolocation) {
+          return reject(new Error('Geolocation not available'));
         }
-      );
-    } else {
-      await fallbackToIp();
+
+        // Fast Wi-Fi / IP triangulation first (reliable on desktops/laptops)
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          () => {
+            // If fast mode fails, try high-accuracy mode with a reasonable timeout
+            navigator.geolocation.getCurrentPosition(
+              resolve,
+              reject,
+              { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+            );
+          },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+        );
+      });
+    };
+
+    try {
+      const pos = await tryGetPosition();
+      const { latitude, longitude } = pos.coords;
+      const data = await api.getWeather(null, latitude, longitude);
+      if (data) {
+        applyWeather(data);
+        return;
+      }
+    } catch {
+      // Browser geolocation rejected, timed out, or unavailable
+    }
+
+    // High-precision IP fallback
+    const ok = await fallbackToIp();
+    if (!ok && isInitial) {
+      const fallback = await api.getWeather('Mysore');
+      applyWeather(fallback);
     }
   }, [autoDetectLocation]);
 
-  // Initial mount: automatically sync device live location
-  useEffect(() => {
-    let isCancelled = false;
-    (async () => {
-      if (!isCancelled) {
-        await syncDeviceLocation(true);
-      }
-    })();
-    return () => {
-      isCancelled = true;
-    };
-  }, [syncDeviceLocation]);
 
   // Fetch weather data whenever user explicitly searches or changes currentCity
   useEffect(() => {

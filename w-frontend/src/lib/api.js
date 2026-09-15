@@ -1,4 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000/api';
+const rawBase = (process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000/api').replace(/\/+$/, '');
+const API_BASE = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
 const WEATHER_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
 
 export const TOKEN_KEY = 'weatherwise_token';
@@ -44,7 +45,7 @@ const DISASTER_IMAGES = {
   earthquake: 'https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=800&q=80',
   flood: 'https://images.unsplash.com/photo-1514632595-4944383f2737?w=800&q=80',
   cyclone: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80',
-  hurricane: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80',
+  hurricane: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80',
   tsunami: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
   wildfire: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
   landslide: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
@@ -80,15 +81,15 @@ function calculateAqi(pm25 = 12) {
 
 function categorizeText(text = '') {
   const t = text.toLowerCase();
-  if (t.includes('tsunami')) return 'tsunami';
-  if (t.includes('volcan') || t.includes('eruption') || t.includes('lava') || t.includes('ash plume')) return 'volcano';
-  if (t.includes('hurricane')) return 'hurricane';
-  if (t.includes('cyclone') || t.includes('typhoon')) return 'cyclone';
-  if (t.includes('earthquake') || t.includes('quake') || t.includes('tremor') || t.includes('seismic')) return 'earthquake';
-  if (t.includes('landslide') || t.includes('mudslide') || t.includes('rockslide')) return 'landslide';
-  if (t.includes('wildfire') || t.includes('forest fire') || t.includes('bushfire')) return 'wildfire';
-  if (t.includes('flood') || t.includes('inundat') || t.includes('deluge') || t.includes('submerged')) return 'flood';
-  if (t.includes('drought') || t.includes('heatwave') || t.includes('water crisis')) return 'drought';
+  if (/tsunami|tidal wave/.test(t)) return 'tsunami';
+  if (/volcan|eruption|lava|magma|ash plume/.test(t)) return 'volcano';
+  if (/tornado|twister|funnel cloud/.test(t)) return 'cyclone';
+  if (/hurricane|typhoon|cyclone/.test(t)) return 'cyclone';
+  if (/earthquake|quake|tremor|seismic|aftershock|richter/.test(t)) return 'earthquake';
+  if (/landslide|mudslide|rockslide|debris flow/.test(t)) return 'landslide';
+  if (/wildfire|forest fire|bushfire|brush fire|\bblaze\b/.test(t)) return 'wildfire';
+  if (/flood|inundat|deluge|river overflow|heavy rain|monsoon|submerged/.test(t)) return 'flood';
+  if (/drought|heatwave|heat dome|water crisis|water shortage/.test(t)) return 'drought';
   return 'storm';
 }
 
@@ -117,8 +118,8 @@ function timeAgo(dateString) {
 }
 
 export const api = {
-  async getWeather(city = 'Bengaluru', lat, lon) {
-    const query = (lat !== undefined && lon !== undefined) ? `${lat},${lon}` : (city || 'Bengaluru');
+  async getWeather(city = 'Mysore', lat, lon) {
+    const query = (lat !== undefined && lon !== undefined) ? `${lat},${lon}` : (city || 'Mysore');
 
     // 1. Query WeatherAPI with full 7-day forecast, hourly data, AQI, and alerts
     try {
@@ -318,7 +319,7 @@ export const api = {
     return false;
   },
 
-  async getAlerts(city = 'Bengaluru') {
+  async getAlerts(city = 'Mysore') {
     try {
       const res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_KEY}&q=${encodeURIComponent(city)}&days=1&alerts=yes`);
       if (res.ok) {
@@ -409,11 +410,37 @@ export const api = {
       queryTopic = `(${queryTopic}) AND (${search.trim()})`;
     }
 
-    // 1. Live Fetch from NewsData.io
+    // 1. Try Backend endpoint first (Server-side aggregation with caching, GDELT, GDACS, USGS, etc.)
+    try {
+      const params = new URLSearchParams();
+      if (category && category !== 'all') params.append('category', category);
+      if (search) params.append('search', search);
+      if (limit) params.append('limit', limit.toString());
+      if (refresh) params.append('refresh', 'true');
+
+      const url = `${API_BASE}/alerts/disaster-news?${params.toString()}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          json.data.forEach((bItem) => {
+            allArticles.push({
+              ...bItem,
+              category: bItem.category ? bItem.category.charAt(0).toUpperCase() + bItem.category.slice(1) : 'Disaster',
+              time: timeAgo(bItem.publishedAt)
+            });
+          });
+        }
+      }
+    } catch {
+      // Backend temporarily unreachable or slow - fall through to direct live feeds
+    }
+
+    // 2. Direct Live Fetch from NewsData.io (fast, high-quality news with images)
     if (NEWSDATA_KEY) {
       try {
         const ndUrl = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_KEY}&q=${encodeURIComponent(queryTopic)}&language=en`;
-        const res = await fetch(ndUrl, { signal: AbortSignal.timeout(6000) });
+        const res = await fetch(ndUrl, { signal: AbortSignal.timeout(8000) });
         if (res.ok) {
           const json = await res.json();
           if (json.results && Array.isArray(json.results)) {
@@ -446,58 +473,15 @@ export const api = {
             });
           }
         }
-      } catch (err) {
-        console.warn('[api.getDisasterNews] NewsData fetch error:', err);
+      } catch {
+        // NewsData fetch failed or quota exceeded
       }
     }
 
-    // 2. Live Fetch from GDELT Project v2
-    try {
-      const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(queryTopic)}&mode=artlist&format=json&maxrecords=35&sort=DateDesc`;
-      const res = await fetch(gdeltUrl, { signal: AbortSignal.timeout(6000) });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.articles && Array.isArray(data.articles)) {
-          data.articles.forEach((a, i) => {
-            if (a.title) {
-              const cat = categorizeText(a.title);
-              const sev = determineSeverity(a.title);
-              allArticles.push({
-                id: `gdelt_${i}_${Date.now()}`,
-                title: a.title,
-                summary: `Disaster report documented by ${a.domain || 'international monitoring'}: ${a.title}`,
-                location: a.sourcecountry || a.domain || 'Global Dispatch',
-                time: a.seendate
-                  ? timeAgo(`${a.seendate.slice(0, 4)}-${a.seendate.slice(4, 6)}-${a.seendate.slice(6, 8)}T${a.seendate.slice(9, 11) || '12'}:${a.seendate.slice(11, 13) || '00'}:00Z`)
-                  : 'Live Alert',
-                publishedAt: a.seendate
-                  ? `${a.seendate.slice(0, 4)}-${a.seendate.slice(4, 6)}-${a.seendate.slice(6, 8)}T12:00:00Z`
-                  : new Date().toISOString(),
-                category: cat.charAt(0).toUpperCase() + cat.slice(1),
-                severity: sev,
-                status: sev === 'danger' ? 'High Alert' : sev === 'warning' ? 'Moderate Risk' : 'Advisory',
-                statusColor: sev === 'danger'
-                  ? 'bg-rose-50 text-rose-700 border-rose-200'
-                  : sev === 'warning'
-                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                  : 'bg-blue-50 text-blue-700 border-blue-200',
-                isBreaking: sev === 'danger',
-                imageUrl: a.socialimage || DISASTER_IMAGES[cat] || DISASTER_IMAGES.storm,
-                url: a.url,
-                source: a.domain || 'GDELT Live'
-              });
-            }
-          });
-        }
-      }
-    } catch (err) {
-      console.warn('[api.getDisasterNews] GDELT fetch error:', err);
-    }
-
-    // 3. Live Fetch from USGS Realtime Earthquakes (when all or earthquake category)
+    // 3. Direct Live Fetch from USGS Realtime Earthquakes (reliable GeoJSON)
     if (category === 'all' || category === 'earthquake') {
       try {
-        const usgsRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson', { signal: AbortSignal.timeout(5000) });
+        const usgsRes = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson', { signal: AbortSignal.timeout(8000) });
         if (usgsRes.ok) {
           const uData = await usgsRes.json();
           if (uData.features && Array.isArray(uData.features)) {
@@ -527,35 +511,54 @@ export const api = {
             });
           }
         }
-      } catch (err) {
-        console.warn('[api.getDisasterNews] USGS fetch error:', err);
+      } catch {
+        // USGS fetch timed out or offline
       }
     }
 
-    // 4. Try Backend endpoint if reachable
-    try {
-      const params = new URLSearchParams();
-      if (category && category !== 'all') params.append('category', category);
-      if (search) params.append('search', search);
-      if (limit) params.append('limit', limit.toString());
-      if (refresh) params.append('refresh', 'true');
-
-      const url = `${API_BASE}/alerts/disaster-news?${params.toString()}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-          json.data.forEach((bItem) => {
-            allArticles.push({
-              ...bItem,
-              category: bItem.category ? bItem.category.charAt(0).toUpperCase() + bItem.category.slice(1) : 'Disaster',
-              time: timeAgo(bItem.publishedAt)
+    // 4. Supplementary Live Fetch from GDELT Project v2 (only if we have few articles)
+    if (allArticles.length < 15) {
+      try {
+        const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(queryTopic)}&mode=artlist&format=json&maxrecords=35&sort=DateDesc`;
+        const res = await fetch(gdeltUrl, { signal: AbortSignal.timeout(10000) });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.articles && Array.isArray(data.articles)) {
+            data.articles.forEach((a, i) => {
+              if (a.title) {
+                const cat = categorizeText(a.title);
+                const sev = determineSeverity(a.title);
+                allArticles.push({
+                  id: `gdelt_${i}_${Date.now()}`,
+                  title: a.title,
+                  summary: `Disaster report documented by ${a.domain || 'international monitoring'}: ${a.title}`,
+                  location: a.sourcecountry || a.domain || 'Global Dispatch',
+                  time: a.seendate
+                    ? timeAgo(`${a.seendate.slice(0, 4)}-${a.seendate.slice(4, 6)}-${a.seendate.slice(6, 8)}T${a.seendate.slice(9, 11) || '12'}:${a.seendate.slice(11, 13) || '00'}:00Z`)
+                    : 'Live Alert',
+                  publishedAt: a.seendate
+                    ? `${a.seendate.slice(0, 4)}-${a.seendate.slice(4, 6)}-${a.seendate.slice(6, 8)}T12:00:00Z`
+                    : new Date().toISOString(),
+                  category: cat.charAt(0).toUpperCase() + cat.slice(1),
+                  severity: sev,
+                  status: sev === 'danger' ? 'High Alert' : sev === 'warning' ? 'Moderate Risk' : 'Advisory',
+                  statusColor: sev === 'danger'
+                    ? 'bg-rose-50 text-rose-700 border-rose-200'
+                    : sev === 'warning'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-blue-50 text-blue-700 border-blue-200',
+                  isBreaking: sev === 'danger',
+                  imageUrl: a.socialimage || DISASTER_IMAGES[cat] || DISASTER_IMAGES.storm,
+                  url: a.url,
+                  source: a.domain || 'GDELT Live'
+                });
+              }
             });
-          });
+          }
         }
+      } catch {
+        // GDELT timed out, blocked by adblocker/CORS, or unreachable - ignore quietly
       }
-    } catch {
-      // Backend not reached
     }
 
     // De-duplicate by title/url

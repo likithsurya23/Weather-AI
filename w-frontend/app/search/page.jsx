@@ -21,19 +21,17 @@ import {
   Info,
   Leaf,
   Map,
-  Plus,
-  Minus,
-  ChevronDown,
   ShieldCheck,
   Bell,
   Navigation,
-  RefreshCw
+  LocateFixed
 } from 'lucide-react';
 import Sidebar from '../../src/components/layout/Sidebar';
 import TopNavbar from '../../src/components/layout/TopNavbar';
 import { useApp } from '../../src/Hooks/useAppContext';
 import { api } from '../../src/lib/api';
 import { formatTempNumber, formatDegree } from '../../src/lib/weatherUtils';
+import WeatherRadarSatelliteMap from '../../src/components/map/WeatherRadarSatelliteMap';
 
 function WeatherSearchContent() {
   const searchParams = useSearchParams();
@@ -50,20 +48,16 @@ function WeatherSearchContent() {
     t
   } = useApp();
 
-  const [selectedMapLayer, setSelectedMapLayer] = useState('Precipitation');
-  const [mapZoomLevel, setMapZoomLevel] = useState(1);
-  const [isLayerDropdownOpen, setIsLayerDropdownOpen] = useState(false);
   const [liveAlerts, setLiveAlerts] = useState([]);
 
   // If query parameter is provided and differs from current city, trigger search.
-  // Otherwise, ensure live device location is synced initially.
   useEffect(() => {
     if (queryParam && queryParam.trim() && queryParam.toLowerCase() !== currentCity.toLowerCase()) {
       selectCity(queryParam.trim());
     } else if (!queryParam && !weather) {
-      syncDeviceLocation(true);
+      selectCity(currentCity || 'Mysore');
     }
-  }, [queryParam, currentCity, selectCity, weather, syncDeviceLocation]);
+  }, [queryParam, currentCity, selectCity, weather]);
 
   // Load live alerts for the current location
   useEffect(() => {
@@ -77,7 +71,7 @@ function WeatherSearchContent() {
   // -------------------------------------------------------------
   // REAL-TIME WEATHER METRICS FROM WEATHERAPI
   // -------------------------------------------------------------
-  const city = weather?.city || currentCity || 'Bengaluru';
+  const city = weather?.city || currentCity || 'Mysore';
   const region = weather?.region || '';
   const country = weather?.country || 'India';
   const rawTemp = weather?.temp !== undefined ? Math.round(weather.temp) : 28;
@@ -171,7 +165,6 @@ function WeatherSearchContent() {
   const aqiStrokeDashoffset = aqiCircumference - aqiPercentage * aqiCircumference;
   const aqiColor = aqiScore <= 50 ? '#10B981' : aqiScore <= 100 ? '#F59E0B' : '#EF4444';
 
-  const mapLayerOptions = ['Precipitation', 'Temperature', 'Wind', 'Cloud Cover', 'Radar'];
 
   const hasGovAlert = liveAlerts.some(a => a.severity === 'danger' || a.severity === 'warning');
   const alertSummaryText = hasGovAlert
@@ -195,31 +188,17 @@ function WeatherSearchContent() {
         </div>
 
         <div className="flex flex-wrap items-center sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-800/80 gap-2">
-          {/* Live Device Location Sync Pill / Button */}
-          {isLiveLocation ? (
-            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-[11px] sm:text-xs font-semibold border border-emerald-200/80 dark:border-emerald-800 shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Location Synced</span>
-              <button
-                onClick={() => syncDeviceLocation()}
-                disabled={isSyncingLocation}
-                title="Resync Live Device Location"
-                className="ml-0.5 p-0.5 hover:bg-emerald-100 dark:hover:bg-emerald-900 rounded-full transition-colors cursor-pointer"
-              >
-                <RefreshCw className={`w-3 h-3 text-emerald-700 dark:text-emerald-400 ${isSyncingLocation ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => syncDeviceLocation()}
-              disabled={isSyncingLocation}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[11px] sm:text-xs font-semibold border border-blue-200/80 dark:border-blue-800 shadow-xs transition-colors cursor-pointer"
-              title="Sync to device live location"
-            >
-              <Navigation className={`w-3 h-3 text-blue-600 dark:text-blue-400 ${isSyncingLocation ? 'animate-spin' : ''}`} />
-              <span>{isSyncingLocation ? 'Syncing...' : 'Use My Live Location'}</span>
-            </button>
-          )}
+          {/* Locate Me Button */}
+          <button
+            type="button"
+            onClick={() => syncDeviceLocation()}
+            disabled={isSyncingLocation}
+            title="Detect and show weather for your current live location"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold shadow-xs shadow-blue-500/20 hover:shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <LocateFixed className={`w-3.5 h-3.5 ${isSyncingLocation ? 'animate-spin' : ''}`} />
+            <span>{isSyncingLocation ? 'Locating...' : 'Locate Me'}</span>
+          </button>
 
           {/* Temperature Unit Switcher Pill */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
@@ -266,11 +245,22 @@ function WeatherSearchContent() {
                     <MapPin className="w-3.5 h-3.5 text-slate-700" />
                     <span className="truncate">{city}{region ? `, ${region}` : country ? `, ${country}` : ''}</span>
                   </div>
-                  {isLiveLocation && (
+                  {isLiveLocation ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200 shadow-xs">
                       <Navigation className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
                       Live Device
                     </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => syncDeviceLocation()}
+                      disabled={isSyncingLocation}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10px] font-medium transition-colors cursor-pointer disabled:opacity-50"
+                      title="Detect exact current location"
+                    >
+                      <LocateFixed className={`w-3 h-3 ${isSyncingLocation ? 'animate-spin' : ''}`} />
+                      <span>{isSyncingLocation ? 'Locating...' : 'Locate Me'}</span>
+                    </button>
                   )}
                 </div>
                 <div className="text-[10px] text-slate-400 font-normal mt-0.5">
@@ -375,116 +365,46 @@ function WeatherSearchContent() {
 
           {/* Row 2: Weather Map + Weather Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            
-            {/* 3. Weather Map Card (Compact) */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between pb-2">
+                     {/* 3. Weather Radar & Satellite Map Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-1.5">
-                  <Map className="w-3.5 h-3.5 text-slate-700" />
+                  <Map className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Weather Map</h3>
-                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-normal">Live weather radar ({city})</p>
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                      Weather Radar & Satellite Map
+                    </h3>
+                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-normal">
+                      Real-time Doppler radar & satellite telemetry ({city})
+                    </p>
                   </div>
                 </div>
 
-                {/* Layer Selector Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsLayerDropdownOpen(!isLayerDropdownOpen)}
-                    className="flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
-                  >
-                    <span>{selectedMapLayer}</span>
-                    <ChevronDown className="w-3 h-3 text-slate-500" />
-                  </button>
-
-                  {isLayerDropdownOpen && (
-                    <div className="absolute right-0 mt-1 w-32 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
-                      {mapLayerOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => {
-                            setSelectedMapLayer(opt);
-                            setIsLayerDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-2.5 py-1 text-xs font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer ${
-                            selectedMapLayer === opt ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700'
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Link
+                  href="/map"
+                  className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <span>Full Map</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
 
-              {/* Map Canvas (Compact height) */}
-              <div className="h-36 sm:h-44 rounded-lg sm:rounded-xl bg-slate-100/90 border border-slate-200/80 relative overflow-hidden flex items-center justify-center select-none my-0.5">
-                <div
-                  className="w-full h-full relative transition-transform duration-300 ease-out"
-                  style={{ transform: `scale(${mapZoomLevel})` }}
-                >
-                  <svg viewBox="0 0 500 350" className="w-full h-full object-cover opacity-90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="500" height="350" fill="#E2E8F0" fillOpacity="0.4" />
-                    <text x="70" y="140" className="text-[11px] fill-slate-400 font-semibold uppercase tracking-wider">Pakistan</text>
-                    <text x="230" y="190" className="text-[11px] fill-slate-400 font-semibold uppercase tracking-wider">India</text>
-                    <text x="390" y="110" className="text-[11px] fill-slate-400 font-semibold uppercase tracking-wider">China</text>
-                    <text x="70" y="240" className="text-[9px] fill-slate-400 font-medium">Arabian Sea</text>
-                    <text x="390" y="270" className="text-[9px] fill-slate-400 font-medium">Bay of Bengal</text>
-
-                    <path
-                      d="M140 40 L210 30 L270 45 L320 80 L380 90 L420 130 L390 180 L350 210 L300 280 L270 320 L250 340 L240 310 L210 260 L180 210 L150 160 L120 130 L110 90 Z"
-                      fill="#CBD5E1"
-                      stroke="#94A3B8"
-                      strokeWidth="1.5"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-
-                  {/* Weather Layer Visual */}
-                  <div className="absolute top-1/3 left-1/3 w-36 h-36 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-
-                  <div className="absolute top-12 left-24 text-white drop-shadow-md">
-                    <Cloud className="w-6 h-6 fill-white/80 text-white" />
-                  </div>
-                  <div className="absolute top-16 right-28 text-blue-500 drop-shadow-md">
-                    <CloudRain className="w-6 h-6 fill-white/90 text-blue-400" />
-                  </div>
-                  <div className="absolute bottom-12 left-40 text-blue-500 drop-shadow-md">
-                    <CloudRain className="w-6 h-6 fill-white/90 text-blue-400" />
-                  </div>
-
-                  {/* Location Pin */}
-                  <div className="absolute top-[68%] left-[45%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                    <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg ring-3 ring-blue-500/30 animate-bounce">
-                      <MapPin className="w-3 h-3 fill-white text-blue-600" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Zoom Controls */}
-                <div className="absolute bottom-2 left-2 flex flex-col bg-white rounded-md shadow-xs border border-slate-200 overflow-hidden z-10">
-                  <button
-                    onClick={() => setMapZoomLevel((prev) => Math.min(prev + 0.15, 1.4))}
-                    className="p-0.5 hover:bg-slate-50 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
-                    title="Zoom In"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => setMapZoomLevel((prev) => Math.max(prev - 0.15, 0.8))}
-                    className="p-0.5 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
-                    title="Zoom Out"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                </div>
-
-                <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1 text-[9px] text-slate-500 font-medium">
-                  <span>Light</span>
-                  <div className="w-12 h-1.5 rounded-full bg-gradient-to-r from-blue-200 via-blue-400 to-blue-700" />
-                  <span>Heavy</span>
-                </div>
+              <div className="pt-2">
+                <WeatherRadarSatelliteMap
+                  city={city}
+                  country={country}
+                  lat={weather?.lat}
+                  lon={weather?.lon}
+                  temp={rawTemp}
+                  condition={condition}
+                  windSpeed={windSpeed}
+                  windDir={weather?.windDir || 'NE'}
+                  humidity={humidity}
+                  rainProbability={weather?.rainProbability || 20}
+                  temperatureUnit={temperatureUnit}
+                  heightClass="h-48 sm:h-56 md:h-64"
+                  showFullMapLink={true}
+                />
               </div>
             </div>
 

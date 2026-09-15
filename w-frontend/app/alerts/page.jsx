@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import {
   MapPin,
@@ -30,6 +29,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../../src/components/layout/Sidebar';
 import TopNavbar from '../../src/components/layout/TopNavbar';
+import GlobalDisasterRadarMap from '../../src/components/alerts/GlobalDisasterRadarMap';
 import { api } from '../../src/lib/api';
 import { useApp } from '../../src/Hooks/useAppContext';
 
@@ -47,7 +47,7 @@ const CATEGORIES = [
 const INCIDENT_COVERS = {
   earthquake: [
     'https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=800&q=80',
-    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80'
+    'https://images.unsplash.com/photo-1545641203-7d072a14e3b2?w=800&q=80'
   ],
   flood: [
     'https://images.unsplash.com/photo-1514632595-4944383f2737?w=800&q=80',
@@ -56,55 +56,95 @@ const INCIDENT_COVERS = {
   ],
   cyclone: [
     'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80',
-    'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80'
+    'https://images.unsplash.com/photo-1562155955-1cb2d73488d7?w=800&q=80'
   ],
   wildfire: [
     'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
     'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80',
-    'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=800&q=80',
-    'https://images.unsplash.com/photo-1525811902-f2342640856e?w=800&q=80'
+    'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=800&q=80'
   ],
   landslide: [
     'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80'
+    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80'
   ],
   volcano: [
     'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
-    'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80'
+    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&q=80'
   ],
   drought: [
     'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80',
     'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80'
   ],
   tsunami: [
-    'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80'
+    'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
+    'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=800&q=80'
   ],
   storm: [
-    'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&q=80'
+    'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&q=80',
+    'https://images.unsplash.com/photo-1511497584788-87676104235f?w=800&q=80'
   ]
 };
 
+function getDisasterCategory(article) {
+  if (!article) return 'storm';
+
+  // 1. Explicit Category check first
+  const catStr = (article.category || '').toLowerCase();
+  if (catStr.includes('earthquake')) return 'earthquake';
+  if (catStr.includes('flood')) return 'flood';
+  if (catStr.includes('cyclone') || catStr.includes('hurricane') || catStr.includes('typhoon')) return 'cyclone';
+  if (catStr.includes('wildfire') || catStr.includes('forest fire')) return 'wildfire';
+  if (catStr.includes('volcano')) return 'volcano';
+  if (catStr.includes('landslide') || catStr.includes('mudslide')) return 'landslide';
+  if (catStr.includes('tsunami')) return 'tsunami';
+  if (catStr.includes('drought') || catStr.includes('heatwave')) return 'drought';
+
+  // 2. High-precision keyword check on Title and Summary
+  const text = `${article.title || ''} ${article.summary || ''}`.toLowerCase();
+  if (/tsunami|tidal wave/.test(text)) return 'tsunami';
+  if (/volcan|eruption|lava|magma|ash plume/.test(text)) return 'volcano';
+  if (/tornado|twister|funnel cloud/.test(text)) return 'cyclone';
+  if (/hurricane|cyclone|typhoon/.test(text)) return 'cyclone';
+  if (/\bquake\b|earthquake|tremor|seismic|aftershock|\bmagnitude\b|\brichter\b/.test(text)) return 'earthquake';
+  if (/landslide|mudslide|rockslide|debris flow/.test(text)) return 'landslide';
+  if (/wildfire|forest fire|bushfire|brush fire|\bblaze\b/.test(text)) return 'wildfire';
+  if (/\bflood\b|flooding|inundat|deluge|river overflow|heavy rain|monsoon|submerged/.test(text)) return 'flood';
+  if (/drought|heatwave|heat dome|water crisis|water shortage|\barid\b/.test(text)) return 'drought';
+
+  return 'storm';
+}
+
 function getIncidentCoverImage(article) {
   if (!article) return INCIDENT_COVERS.storm[0];
-
-  const text = `${article.title || ''} ${article.summary || ''} ${article.category || ''}`.toLowerCase();
-
-  let cat = 'storm';
-  if (/earthquake|quake|tremor|seismic|aftershock|fault/.test(text)) cat = 'earthquake';
-  else if (/wildfire|forest fire|bushfire|brush fire|blaze/.test(text)) cat = 'wildfire';
-  else if (/flood|inundat|deluge|river overflow|heavy rain|monsoon|submerged/.test(text)) cat = 'flood';
-  else if (/cyclone|hurricane|typhoon|tornado|twister/.test(text)) cat = 'cyclone';
-  else if (/landslide|mudslide|rockslide|debris flow/.test(text)) cat = 'landslide';
-  else if (/volcan|eruption|lava|magma|ash plume/.test(text)) cat = 'volcano';
-  else if (/drought|heatwave|heat dome|arid|water crisis|water shortage/.test(text)) cat = 'drought';
-  else if (/tsunami|tidal wave/.test(text)) cat = 'tsunami';
-
+  const cat = getDisasterCategory(article);
   const pool = INCIDENT_COVERS[cat] || INCIDENT_COVERS.storm;
   const seed = (article.id || article.title || '1')
     .split('')
     .reduce((acc, c) => acc + c.charCodeAt(0), 0);
 
   return pool[seed % pool.length];
+}
+
+function DisasterNewsCover({ article, className = '', fill = true, priority = false, loading }) {
+  const fallbackSrc = getIncidentCoverImage(article);
+  const [failedSrc, setFailedSrc] = useState(null);
+
+  const desiredSrc = article?.imageUrl || fallbackSrc;
+  const isFailed = failedSrc === desiredSrc;
+  const src = isFailed ? fallbackSrc : desiredSrc;
+
+  return (
+    <Image
+      src={src}
+      alt={article?.title || 'Disaster alert'}
+      fill={fill}
+      unoptimized
+      priority={priority}
+      loading={loading || (priority ? 'eager' : undefined)}
+      onError={() => setFailedSrc(desiredSrc)}
+      className={className}
+    />
+  );
 }
 
 export default function AlertsPage() {
@@ -402,7 +442,7 @@ export default function AlertsPage() {
                     ))}
                   </div>
                 ) : currentItems.length > 0 ? (
-                  currentItems.map((article) => {
+                  currentItems.map((article, idx) => {
                     const isBookmarked = savedArticles[article.id];
 
                     return (
@@ -413,11 +453,10 @@ export default function AlertsPage() {
                       >
                         {/* Article Thumbnail Image */}
                         <div className="w-full sm:w-40 lg:w-44 h-28 sm:h-28 rounded-md sm:rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative shrink-0">
-                          <Image
-                            src={getIncidentCoverImage(article)}
-                            alt={article.title}
-                            fill
-                            unoptimized
+                          <DisasterNewsCover
+                            article={article}
+                            priority={idx === 0}
+                            loading={idx === 0 ? 'eager' : undefined}
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           {/* Breaking Badge */}
@@ -541,70 +580,11 @@ export default function AlertsPage() {
             {/* ========================================================= */}
             <div className="lg:col-span-4 space-y-2.5 sm:space-y-3">
               
-              {/* 1. Global Disaster Map Card (Compact) */}
-              <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-slate-700" />
-                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">Global Disaster Map</h3>
-                  </div>
-                  <Link
-                    href="/map"
-                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 transition-colors"
-                  >
-                    <span>View Full Map</span>
-                    <ArrowRight className="w-2.5 h-2.5" />
-                  </Link>
-                </div>
-
-                {/* World Map Vector with Plotted Color Disaster Dots */}
-                <div className="relative h-28 sm:h-32 my-2 rounded-md bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center select-none">
-                  <svg viewBox="0 0 400 200" className="w-full h-full object-cover opacity-80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="400" height="200" fill="#F8FAFC" />
-                    {/* Simplified Continents Outline */}
-                    <path d="M40 30 L90 25 L120 45 L90 90 L50 80 L30 50 Z" fill="#E2E8F0" />
-                    <path d="M80 100 L115 110 L100 170 L75 140 Z" fill="#E2E8F0" />
-                    <path d="M160 30 L220 20 L320 35 L330 85 L260 90 L210 60 L160 55 Z" fill="#E2E8F0" />
-                    <path d="M170 70 L220 75 L215 140 L180 145 L165 95 Z" fill="#E2E8F0" />
-                    <path d="M250 80 L280 85 L265 125 L245 100 Z" fill="#E2E8F0" />
-                    <path d="M310 120 L360 125 L350 165 L305 155 Z" fill="#E2E8F0" />
-                  </svg>
-
-                  {/* Plotted Colored Disaster Markers */}
-                  <div className="absolute top-[28%] left-[20%] w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-orange-400/30 animate-pulse" title="Canada Wildfire" />
-                  <div className="absolute top-[68%] left-[24%] w-2 h-2 rounded-full bg-rose-600 ring-2 ring-rose-500/30" title="Chile Tremor" />
-                  <div className="absolute top-[32%] left-[48%] w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/30" title="Europe Flood" />
-                  <div className="absolute top-[22%] left-[60%] w-2 h-2 rounded-full bg-blue-500 ring-2 ring-blue-400/30" title="Storm" />
-                  <div className="absolute top-[52%] left-[65%] w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-400/30" title="Karnataka Heavy Rain" />
-                  <div className="absolute top-[40%] left-[72%] w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-orange-400/30" title="Bay of Bengal Cyclone" />
-                  <div className="absolute top-[58%] left-[73%] w-2.5 h-2.5 rounded-full bg-rose-600 ring-2 ring-rose-500/30" title="Assam Earthquake" />
-                  <div className="absolute top-[72%] left-[84%] w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/30" title="Queensland Flood" />
-                </div>
-
-                {/* Map Legend */}
-                <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 text-[9px] sm:text-[10px] text-slate-600 font-medium">
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
-                    <span>Earthquake</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <span>Cyclone</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Flood</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                    <span>Wildfire</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    <span>Other</span>
-                  </div>
-                </div>
-              </div>
+              {/* 1. High-Tech Global Disaster Radar Map */}
+              <GlobalDisasterRadarMap
+                newsList={newsList}
+                onSelectArticle={setSelectedArticle}
+              />
 
               {/* 2. Trending Topics Card (Compact) */}
               <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200/80 shadow-xs">
@@ -678,11 +658,8 @@ export default function AlertsPage() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-in fade-in duration-150">
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden w-full max-w-xl max-h-[88vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
             <div className="relative h-48 sm:h-52 w-full bg-slate-900">
-              <Image
-                src={getIncidentCoverImage(selectedArticle)}
-                alt={selectedArticle.title}
-                fill
-                unoptimized
+              <DisasterNewsCover
+                article={selectedArticle}
                 className="object-cover"
               />
               <button
