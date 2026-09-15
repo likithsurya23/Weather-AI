@@ -23,11 +23,7 @@ async function connectDB() {
   }
 }
 
-function isDBConnected() {
-  return isConnected && mongoose.connection.readyState === 1;
-}
-
 module.exports = {
-  connectDB,
-  isDBConnected
+  connectDB
 };
+

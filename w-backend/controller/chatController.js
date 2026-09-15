@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const ChatHistory = require('../models/ChatHistory');
 const geminiService = require('../services/geminiService');
 const API_KEY = process.env.WEATHER_API_KEY;
@@ -248,7 +249,17 @@ exports.sendMessage = async (req, res, next) => {
         role: botMsg.role,
         content: botMsg.content,
         card: botMsg.card,
-        timestamp: botMsg.timestamp
+        timestamp: botMsg.timestamp,
+        createdAt: botMsg.createdAt
+      },
+      userMessage: {
+        id: userMsg._id.toString(),
+        _id: userMsg._id.toString(),
+        userId: userMsg.userId.toString(),
+        role: userMsg.role,
+        content: userMsg.content,
+        timestamp: userMsg.timestamp,
+        createdAt: userMsg.createdAt
       },
       suggestions
     });
@@ -262,6 +273,91 @@ exports.clearHistory = async (req, res, next) => {
     const userId = req.user._id;
     await ChatHistory.deleteMany({ userId });
     res.json({ success: true, message: 'Chat history cleared' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteMessage = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid message ID' });
+    }
+
+    const targetMsg = await ChatHistory.findOne({ _id: id, userId });
+    if (!targetMsg) {
+      return res.status(404).json({ success: false, message: 'Message not found' });
+    }
+
+    const idsToDelete = [targetMsg._id];
+
+    // If deleting a user prompt, also find and delete the immediate assistant response
+    if (targetMsg.role === 'user') {
+      const botResponse = await ChatHistory.findOne({
+        userId,
+        role: 'assistant',
+        createdAt: { $gte: targetMsg.createdAt }
+      }).sort({ createdAt: 1 });
+
+      if (botResponse) {
+        idsToDelete.push(botResponse._id);
+      }
+    }
+
+    await ChatHistory.deleteMany({ _id: { $in: idsToDelete }, userId });
+
+    res.json({
+      success: true,
+      message: 'Chat message deleted successfully',
+      deletedIds: idsToDelete.map(i => i.toString())
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteMessages = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { messageIds } = req.body;
+
+    if (!Array.isArray(messageIds) || messageIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Array of message IDs required' });
+    }
+
+    const validIds = messageIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid message IDs provided' });
+    }
+
+    const targetMsgs = await ChatHistory.find({ _id: { $in: validIds }, userId });
+    const allIdsToDelete = new Set(targetMsgs.map(m => m._id.toString()));
+
+    for (const msg of targetMsgs) {
+      if (msg.role === 'user') {
+        const botResponse = await ChatHistory.findOne({
+          userId,
+          role: 'assistant',
+          createdAt: { $gte: msg.createdAt }
+        }).sort({ createdAt: 1 });
+
+        if (botResponse) {
+          allIdsToDelete.add(botResponse._id.toString());
+        }
+      }
+    }
+
+    const deleteArray = Array.from(allIdsToDelete).map(id => new mongoose.Types.ObjectId(id));
+    await ChatHistory.deleteMany({ _id: { $in: deleteArray }, userId });
+
+    res.json({
+      success: true,
+      message: 'Selected chats deleted successfully',
+      deletedIds: Array.from(allIdsToDelete)
+    });
   } catch (err) {
     next(err);
   }
