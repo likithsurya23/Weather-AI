@@ -17,7 +17,6 @@ import {
   CloudRain,
   Info,
   Leaf,
-  Map,
   Plus,
   AlertTriangle,
   Bell,
@@ -35,7 +34,6 @@ import { useApp } from '../../src/Hooks/useAppContext';
 import { api } from '../../src/lib/api';
 import { formatDegree, formatTemp, formatTempNumber } from '../../src/lib/weatherUtils';
 import ProtectedRoute from '../../src/components/auth/ProtectedRoute';
-import WeatherRadarSatelliteMap from '../../src/components/map/WeatherRadarSatelliteMap';
 import { findMatchingCities } from '../../src/lib/citiesData';
 
 export default function DashboardPage() {
@@ -261,11 +259,13 @@ export default function DashboardPage() {
     const q = searchQuery.trim();
     if (!q) return;
 
+    let isCancelled = false;
+
     // Debounced remote lookup
     const timer = setTimeout(async () => {
       try {
         const remote = await api.searchLocations(q);
-        if (remote && remote.length > 0) {
+        if (!isCancelled && remote && remote.length > 0) {
           setSearchResults((prev) => {
             const seen = new Set(prev.map((p) => `${p.name.toLowerCase()}-${(p.country || '').toLowerCase()}`));
             const merged = [...prev];
@@ -284,7 +284,10 @@ export default function DashboardPage() {
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
   }, [searchQuery]);
 
   const handleSearchModalSubmit = async (e) => {
@@ -608,51 +611,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-              </div>
-
-              {/* Row 3: 5. Weather Radar & Satellite Map Card */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
-                <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                      <Map className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                        Weather Radar & Satellite Map
-                      </h3>
-                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-normal">
-                        Live Doppler radar, precipitation sweeps & satellite imagery ({city})
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/map"
-                    className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span>{t('dash.viewFullMap', 'View Full Map')}</span>
-                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </Link>
-                </div>
-
-                <div className="pt-2.5 sm:pt-3">
-                  <WeatherRadarSatelliteMap
-                    city={city}
-                    country={country}
-                    lat={weather?.lat}
-                    lon={weather?.lon}
-                    temp={rawTemp}
-                    condition={condition}
-                    windSpeed={windSpeed}
-                    windDir={weather?.windDir || 'NE'}
-                    humidity={humidity}
-                    rainProbability={weather?.rainProbability || 20}
-                    temperatureUnit={temperatureUnit}
-                    heightClass="h-56 sm:h-64 md:h-72"
-                    showFullMapLink={true}
-                  />
-                </div>
               </div>
 
             </div>

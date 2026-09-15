@@ -33,9 +33,6 @@ export default function ChatPage() {
                   <h1 className="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     {t('chat.assistantTitle', 'WeatherWise Assistant')}
                   </h1>
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                    {t('chat.assistantSubtitle', 'Your AI companion for weather updates, disaster alerts, and safe decisions.')}
-                  </p>
                 </div>
               </div>
 

@@ -11,8 +11,11 @@ import {
   FlameKindling,
   ArrowRight,
   AlertTriangle,
+  Mountain,
+  Sun,
   Radio
 } from 'lucide-react';
+import { getDisasterCategory } from '../../lib/disasterClassifier';
 
 // Representative global coordinates for hazards
 const REGIONAL_SECTORS = [
@@ -76,15 +79,7 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
       }
       usedCoords.add(`${Math.round(px)}_${Math.round(py)}`);
 
-      const catLower = (article.category || '').toLowerCase();
-      let cat = 'storm';
-      if (catLower.includes('earthquake')) cat = 'earthquake';
-      else if (catLower.includes('flood')) cat = 'flood';
-      else if (catLower.includes('cyclone') || catLower.includes('hurricane')) cat = 'cyclone';
-      else if (catLower.includes('wildfire')) cat = 'wildfire';
-      else if (catLower.includes('volcano')) cat = 'volcano';
-      else if (catLower.includes('landslide')) cat = 'landslide';
-      else if (catLower.includes('tsunami')) cat = 'tsunami';
+      const cat = getDisasterCategory(article);
 
       mapped.push({
         id: article.id || `live_${idx}`,
@@ -109,6 +104,7 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
     if (activeFilter === 'cyclone') return pins.filter((p) => p.cat === 'cyclone' || p.cat === 'storm');
     if (activeFilter === 'flood') return pins.filter((p) => p.cat === 'flood');
     if (activeFilter === 'wildfire') return pins.filter((p) => p.cat === 'wildfire');
+    if (activeFilter === 'drought') return pins.filter((p) => p.cat === 'drought');
     return pins;
   }, [pins, activeFilter]);
 
@@ -117,6 +113,8 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
     if (cat === 'flood') return { bg: 'bg-emerald-500', ring: 'ring-emerald-400/40', ping: 'bg-emerald-400' };
     if (cat === 'cyclone') return { bg: 'bg-blue-500', ring: 'ring-blue-400/40', ping: 'bg-blue-400' };
     if (cat === 'wildfire') return { bg: 'bg-orange-500', ring: 'ring-orange-400/40', ping: 'bg-orange-400' };
+    if (cat === 'drought') return { bg: 'bg-amber-600', ring: 'ring-amber-500/40', ping: 'bg-amber-500' };
+    if (cat === 'earthquake') return { bg: 'bg-purple-500', ring: 'ring-purple-400/40', ping: 'bg-purple-400' };
     return { bg: 'bg-amber-500', ring: 'ring-amber-400/40', ping: 'bg-amber-400' };
   };
 
@@ -127,6 +125,8 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
       case 'cyclone': return Wind;
       case 'wildfire': return Flame;
       case 'volcano': return FlameKindling;
+      case 'landslide': return Mountain;
+      case 'drought': return Sun;
       default: return AlertTriangle;
     }
   };
@@ -164,7 +164,8 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
             { id: 'earthquake', label: 'Quakes' },
             { id: 'cyclone', label: 'Storms' },
             { id: 'flood', label: 'Floods' },
-            { id: 'wildfire', label: 'Fires' }
+            { id: 'wildfire', label: 'Fires' },
+            { id: 'drought', label: 'Drought' }
           ].map((btn) => {
             const active = activeFilter === btn.id;
             return (
@@ -345,6 +346,10 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
         <div className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
           <span>Wildfire</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+          <span>Drought</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />

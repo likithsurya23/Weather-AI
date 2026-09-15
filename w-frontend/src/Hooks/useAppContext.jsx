@@ -178,7 +178,7 @@ export function AppProvider({ children }) {
 
     // If authenticated, sync preferences to MongoDB backend
     if (user) {
-      api.updatePreferences(settings).catch(() => {});
+      api.updatePreferences(settings).catch(() => { });
     }
   }, [
     temperatureUnit,
@@ -289,9 +289,14 @@ export function AppProvider({ children }) {
 
     // High-precision IP fallback
     const ok = await fallbackToIp();
-    if (!ok && isInitial) {
-      const fallback = await api.getWeather('Mysore');
-      applyWeather(fallback);
+    if (!ok) {
+      if (isInitial) {
+        const fallback = await api.getWeather('Mysore');
+        applyWeather(fallback);
+        return;
+      }
+      setIsSyncingLocation(false);
+      setLoadingWeather(false);
     }
   }, [autoDetectLocation]);
 

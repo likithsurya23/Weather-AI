@@ -32,6 +32,7 @@ import TopNavbar from '../../src/components/layout/TopNavbar';
 import GlobalDisasterRadarMap from '../../src/components/alerts/GlobalDisasterRadarMap';
 import { api } from '../../src/lib/api';
 import { useApp } from '../../src/Hooks/useAppContext';
+import { getDisasterCategory, getIncidentCoverImage } from '../../src/lib/disasterClassifier';
 
 const CATEGORIES = [
   { id: 'all', key: 'alerts.allCategories', label: 'All News', icon: Globe },
@@ -44,94 +45,12 @@ const CATEGORIES = [
   { id: 'volcano', key: 'alerts.volcano', label: 'Volcanoes', icon: FlameKindling }
 ];
 
-const INCIDENT_COVERS = {
-  earthquake: [
-    'https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=800&q=80',
-    'https://images.unsplash.com/photo-1545641203-7d072a14e3b2?w=800&q=80'
-  ],
-  flood: [
-    'https://images.unsplash.com/photo-1514632595-4944383f2737?w=800&q=80',
-    'https://images.unsplash.com/photo-1600335895229-6e75511892c8?w=800&q=80',
-    'https://images.unsplash.com/photo-1546768292-fb12f6c92568?w=800&q=80'
-  ],
-  cyclone: [
-    'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80',
-    'https://images.unsplash.com/photo-1562155955-1cb2d73488d7?w=800&q=80'
-  ],
-  wildfire: [
-    'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
-    'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&q=80',
-    'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=800&q=80'
-  ],
-  landslide: [
-    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
-    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80'
-  ],
-  volcano: [
-    'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
-    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&q=80'
-  ],
-  drought: [
-    'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80',
-    'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&q=80'
-  ],
-  tsunami: [
-    'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80',
-    'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=800&q=80'
-  ],
-  storm: [
-    'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&q=80',
-    'https://images.unsplash.com/photo-1511497584788-87676104235f?w=800&q=80'
-  ]
-};
-
-function getDisasterCategory(article) {
-  if (!article) return 'storm';
-
-  // 1. Explicit Category check first
-  const catStr = (article.category || '').toLowerCase();
-  if (catStr.includes('earthquake')) return 'earthquake';
-  if (catStr.includes('flood')) return 'flood';
-  if (catStr.includes('cyclone') || catStr.includes('hurricane') || catStr.includes('typhoon')) return 'cyclone';
-  if (catStr.includes('wildfire') || catStr.includes('forest fire')) return 'wildfire';
-  if (catStr.includes('volcano')) return 'volcano';
-  if (catStr.includes('landslide') || catStr.includes('mudslide')) return 'landslide';
-  if (catStr.includes('tsunami')) return 'tsunami';
-  if (catStr.includes('drought') || catStr.includes('heatwave')) return 'drought';
-
-  // 2. High-precision keyword check on Title and Summary
-  const text = `${article.title || ''} ${article.summary || ''}`.toLowerCase();
-  if (/tsunami|tidal wave/.test(text)) return 'tsunami';
-  if (/volcan|eruption|lava|magma|ash plume/.test(text)) return 'volcano';
-  if (/tornado|twister|funnel cloud/.test(text)) return 'cyclone';
-  if (/hurricane|cyclone|typhoon/.test(text)) return 'cyclone';
-  if (/\bquake\b|earthquake|tremor|seismic|aftershock|\bmagnitude\b|\brichter\b/.test(text)) return 'earthquake';
-  if (/landslide|mudslide|rockslide|debris flow/.test(text)) return 'landslide';
-  if (/wildfire|forest fire|bushfire|brush fire|\bblaze\b/.test(text)) return 'wildfire';
-  if (/\bflood\b|flooding|inundat|deluge|river overflow|heavy rain|monsoon|submerged/.test(text)) return 'flood';
-  if (/drought|heatwave|heat dome|water crisis|water shortage|\barid\b/.test(text)) return 'drought';
-
-  return 'storm';
-}
-
-function getIncidentCoverImage(article) {
-  if (!article) return INCIDENT_COVERS.storm[0];
-  const cat = getDisasterCategory(article);
-  const pool = INCIDENT_COVERS[cat] || INCIDENT_COVERS.storm;
-  const seed = (article.id || article.title || '1')
-    .split('')
-    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
-
-  return pool[seed % pool.length];
-}
-
 function DisasterNewsCover({ article, className = '', fill = true, priority = false, loading }) {
-  const fallbackSrc = getIncidentCoverImage(article);
+  const incidentCover = getIncidentCoverImage(article);
   const [failedSrc, setFailedSrc] = useState(null);
 
-  const desiredSrc = article?.imageUrl || fallbackSrc;
-  const isFailed = failedSrc === desiredSrc;
-  const src = isFailed ? fallbackSrc : desiredSrc;
+  // Directly use the incident cover image resolved by disasterClassifier.js
+  const src = (failedSrc === incidentCover) ? (article?.imageUrl || incidentCover) : incidentCover;
 
   return (
     <Image
@@ -141,7 +60,7 @@ function DisasterNewsCover({ article, className = '', fill = true, priority = fa
       unoptimized
       priority={priority}
       loading={loading || (priority ? 'eager' : undefined)}
-      onError={() => setFailedSrc(desiredSrc)}
+      onError={() => setFailedSrc(src)}
       className={className}
     />
   );
@@ -505,8 +424,8 @@ export default function AlertsPage() {
                               </div>
 
                               {/* Category Tag */}
-                              <span className="px-1 py-0.2 rounded-xs bg-blue-50 text-blue-700 text-[9px] font-semibold border border-blue-100">
-                                {article.category}
+                              <span className="px-1 py-0.2 rounded-xs bg-blue-50 text-blue-700 text-[9px] font-semibold border border-blue-100 capitalize">
+                                {article.category || getDisasterCategory(article)}
                               </span>
 
                               {/* Status Tag */}
@@ -670,8 +589,8 @@ export default function AlertsPage() {
               </button>
 
               <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-[11px] font-semibold">
-                <span className="px-2 py-0.5 rounded-md bg-blue-600/90 backdrop-blur-xs">
-                  {selectedArticle.category}
+                <span className="px-2 py-0.5 rounded-md bg-blue-600/90 backdrop-blur-xs capitalize">
+                  {selectedArticle.category || getDisasterCategory(selectedArticle)}
                 </span>
                 <span className="text-slate-200">{selectedArticle.time}</span>
               </div>

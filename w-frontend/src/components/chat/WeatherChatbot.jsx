@@ -23,7 +23,10 @@ import {
   AlertTriangle,
   Plane,
   MapPin,
-  Umbrella
+  Umbrella,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useApp } from '../../Hooks/useAppContext';
@@ -52,6 +55,15 @@ function getLocalizedChatDefaults(language = 'English') {
       inputPlaceholder: "अपना मौसम प्रश्न यहाँ लिखें...",
       recentChats: "हाल की बातचीत",
       newChat: "नई बातचीत",
+      clearChat: "चैट साफ़ करें",
+      clearChatConfirmTitle: "चैट इतिहास साफ़ करें?",
+      clearChatConfirmDesc: "यह इस बातचीत के सभी संदेशों को हटा देगा। यह क्रिया पूर्ववत नहीं की जा सकती।",
+      deleteChat: "हटाएं",
+      deleteSelected: "चुने हुए हटाएं",
+      selectChats: "चुनें",
+      cancel: "रद्द करें",
+      confirm: "सभी साफ़ करें",
+      selected: "चुने गए",
       today: "आज",
       yesterday: "कल",
       thisWeek: "इस सप्ताह",
@@ -91,6 +103,15 @@ function getLocalizedChatDefaults(language = 'English') {
       inputPlaceholder: "ನಿಮ್ಮ ಹವಾಮಾನ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...",
       recentChats: "ಇತ್ತೀಚಿನ ಚಾಟ್‌ಗಳು",
       newChat: "ಹೊಸ ಚಾಟ್",
+      clearChat: "ಚಾಟ್ ತೆರವುಗೊಳಿಸಿ",
+      clearChatConfirmTitle: "ಚಾಟ್ ಇತಿಹಾಸವನ್ನು ತೆರವುಗೊಳಿಸುವುದೇ?",
+      clearChatConfirmDesc: "ಇದು ಈ ಸಂಭಾಷಣೆಯಲ್ಲಿನ ಎಲ್ಲಾ ಸಂದೇಶಗಳನ್ನು ತೆಗೆದುಹಾಕುತ್ತದೆ. ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ.",
+      deleteChat: "ಅಳಿಸಿ",
+      deleteSelected: "ಆಯ್ಕೆಮಾಡಿದ್ದನ್ನು ಅಳಿಸಿ",
+      selectChats: "ಆಯ್ಕೆಮಾಡಿ",
+      cancel: "ರದ್ದುಮಾಡಿ",
+      confirm: "ಎಲ್ಲವನ್ನೂ ತೆರವುಗೊಳಿಸಿ",
+      selected: "ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ",
       today: "ಇಂದು",
       yesterday: "ನಿನ್ನೆ",
       thisWeek: "ಈ ವಾರ",
@@ -130,6 +151,15 @@ function getLocalizedChatDefaults(language = 'English') {
       inputPlaceholder: "Escribe tu pregunta aquí...",
       recentChats: "Chats recientes",
       newChat: "Nuevo Chat",
+      clearChat: "Borrar Chat",
+      clearChatConfirmTitle: "¿Borrar historial de chat?",
+      clearChatConfirmDesc: "Esto eliminará permanentemente todos los mensajes de esta conversación.",
+      deleteChat: "Eliminar",
+      deleteSelected: "Eliminar seleccionados",
+      selectChats: "Seleccionar",
+      cancel: "Cancelar",
+      confirm: "Borrar todo",
+      selected: "seleccionados",
       today: "Hoy",
       yesterday: "Ayer",
       thisWeek: "Esta semana",
@@ -169,6 +199,15 @@ function getLocalizedChatDefaults(language = 'English') {
       inputPlaceholder: "Posez votre question ici...",
       recentChats: "Discussions récentes",
       newChat: "Nouvelle discussion",
+      clearChat: "Effacer le chat",
+      clearChatConfirmTitle: "Effacer l'historique du chat ?",
+      clearChatConfirmDesc: "Cela supprimera définitivement tous les messages de cette conversation.",
+      deleteChat: "Supprimer",
+      deleteSelected: "Supprimer la sélection",
+      selectChats: "Sélectionner",
+      cancel: "Annuler",
+      confirm: "Tout effacer",
+      selected: "sélectionnés",
       today: "Aujourd'hui",
       yesterday: "Hier",
       thisWeek: "Cette semaine",
@@ -208,6 +247,15 @@ function getLocalizedChatDefaults(language = 'English') {
       inputPlaceholder: "Stellen Sie hier Ihre Frage...",
       recentChats: "Kürzliche Chats",
       newChat: "Neuer Chat",
+      clearChat: "Chat löschen",
+      clearChatConfirmTitle: "Chat-Verlauf löschen?",
+      clearChatConfirmDesc: "Dadurch werden alle Nachrichten in dieser Unterhaltung dauerhaft entfernt.",
+      deleteChat: "Löschen",
+      deleteSelected: "Auswahl löschen",
+      selectChats: "Auswählen",
+      cancel: "Abbrechen",
+      confirm: "Alles löschen",
+      selected: "ausgewählt",
       today: "Heute",
       yesterday: "Gestern",
       thisWeek: "Diese Woche",
@@ -247,6 +295,15 @@ function getLocalizedChatDefaults(language = 'English') {
       inputPlaceholder: "天気に関する質問を入力...",
       recentChats: "最近のチャット",
       newChat: "新規チャット",
+      clearChat: "チャットを消去",
+      clearChatConfirmTitle: "チャット履歴を消去しますか？",
+      clearChatConfirmDesc: "この会話のすべてのメッセージが完全に消去されます。この操作は元に戻せません。",
+      deleteChat: "削除",
+      deleteSelected: "選択項目を削除",
+      selectChats: "選択",
+      cancel: "キャンセル",
+      confirm: "すべて消去",
+      selected: "件選択中",
       today: "今日",
       yesterday: "昨日",
       thisWeek: "今週",
@@ -257,7 +314,7 @@ function getLocalizedChatDefaults(language = 'English') {
       newButton: "新規",
       quickInquiries: "クイック問い合わせ",
       myCurrentLocation: "現在の位置情報",
-      severeWeatherAlerts: "気象警報・注意報",
+      severeWeatherAlerts: "気象警報・注意报",
       rainUmbrellaAdvice: "雨・傘のアドバイス",
       highLabel: "最高:",
       lowLabel: "最低:",
@@ -285,6 +342,15 @@ function getLocalizedChatDefaults(language = 'English') {
     inputPlaceholder: "Type your question here...",
     recentChats: "Recent Chats",
     newChat: "New Chat",
+    clearChat: "Clear Chat",
+    clearChatConfirmTitle: "Clear Chat History?",
+    clearChatConfirmDesc: "This will permanently remove all messages in this conversation. This action cannot be undone.",
+    deleteChat: "Delete",
+    deleteSelected: "Delete Selected",
+    selectChats: "Select",
+    cancel: "Cancel",
+    confirm: "Clear All",
+    selected: "selected",
     today: "Today",
     yesterday: "Yesterday",
     thisWeek: "This Week",
@@ -342,6 +408,11 @@ export default function WeatherChatbot() {
   const [likedMap, setLikedMap] = useState({});
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [clearModalOpen, setClearModalOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedChatIds, setSelectedChatIds] = useState(new Set());
+  const [activeHighlightId, setActiveHighlightId] = useState(null);
 
   const chatEndRef = useRef(null);
   const localized = getLocalizedChatDefaults(language);
@@ -396,7 +467,16 @@ export default function WeatherChatbot() {
     try {
       const res = await api.sendChatMessage(text, language, currentCity);
       if (res && res.data) {
-        setMessages(prev => [...prev, res.data]);
+        setMessages(prev => {
+          const updated = [...prev];
+          if (res.userMessage && res.userMessage.id) {
+            const lastUserIdx = updated.findLastIndex(m => m.id === userMsg.id);
+            if (lastUserIdx !== -1) {
+              updated[lastUserIdx] = res.userMessage;
+            }
+          }
+          return [...updated, res.data];
+        });
         if (res.suggestions && Array.isArray(res.suggestions) && res.suggestions.length > 0) {
           setSuggestions(res.suggestions);
         }
@@ -428,8 +508,7 @@ export default function WeatherChatbot() {
     }
   }, [input, language, currentCity, mobileDrawerOpen, localized.connectionError]);
 
-  const handleNewChat = async () => {
-    await api.clearChatHistory();
+  const handleNewChat = () => {
     const userName = user?.name ? user.name.split(' ')[0] : 'User';
     const personalizedGreeting = buildPersonalizedGreeting(localized.greeting, userName);
     setMessages([
@@ -441,7 +520,120 @@ export default function WeatherChatbot() {
       }
     ]);
     setSuggestions([]);
+    setSelectedChatIds(new Set());
+    setIsSelectionMode(false);
     if (mobileDrawerOpen) setMobileDrawerOpen(false);
+  };
+
+  const handleClearChat = async () => {
+    setIsClearing(true);
+    try {
+      await api.clearChatHistory();
+      const userName = user?.name ? user.name.split(' ')[0] : 'User';
+      const personalizedGreeting = buildPersonalizedGreeting(localized.greeting, userName);
+      setMessages([
+        {
+          id: `init_cleared_${Date.now()}`,
+          role: 'assistant',
+          content: personalizedGreeting,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+      setSuggestions([]);
+      setSelectedChatIds(new Set());
+      setIsSelectionMode(false);
+      setClearModalOpen(false);
+      if (mobileDrawerOpen) setMobileDrawerOpen(false);
+    } catch (err) {
+      console.error('Failed to clear chat history:', err);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleDeleteSingleChat = async (e, chat) => {
+    e?.stopPropagation();
+    const targetId = chat.id || chat._id;
+    if (!targetId) return;
+
+    setMessages(prev => {
+      const idx = prev.findIndex(m => m.id === targetId || m._id === targetId);
+      if (idx === -1) return prev;
+      const nextMsg = prev[idx + 1];
+      const removeNext = nextMsg && nextMsg.role === 'assistant';
+      const filtered = prev.filter((_, i) => i !== idx && (!removeNext || i !== idx + 1));
+
+      if (filtered.length === 0) {
+        const userName = user?.name ? user.name.split(' ')[0] : 'User';
+        return [{
+          id: `init_welcome_${Date.now()}`,
+          role: 'assistant',
+          content: buildPersonalizedGreeting(localized.greeting, userName),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }];
+      }
+      return filtered;
+    });
+
+    setSelectedChatIds(prev => {
+      const next = new Set(prev);
+      next.delete(targetId);
+      return next;
+    });
+
+    if (chat._id || (chat.id && !chat.id.startsWith('usr_') && !chat.id.startsWith('init_'))) {
+      await api.deleteChatMessage(chat._id || chat.id);
+    }
+  };
+
+  const handleDeleteSelectedChats = async () => {
+    if (selectedChatIds.size === 0) return;
+    const idsToDelete = Array.from(selectedChatIds);
+
+    setMessages(prev => {
+      const toRemove = new Set(idsToDelete);
+      prev.forEach((m, idx) => {
+        if ((toRemove.has(m.id) || toRemove.has(m._id)) && m.role === 'user') {
+          const next = prev[idx + 1];
+          if (next && next.role === 'assistant') {
+            toRemove.add(next.id || next._id);
+          }
+        }
+      });
+
+      const filtered = prev.filter(m => !toRemove.has(m.id) && !toRemove.has(m._id));
+      if (filtered.length === 0) {
+        const userName = user?.name ? user.name.split(' ')[0] : 'User';
+        return [{
+          id: `init_welcome_${Date.now()}`,
+          role: 'assistant',
+          content: buildPersonalizedGreeting(localized.greeting, userName),
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }];
+      }
+      return filtered;
+    });
+
+    setSelectedChatIds(new Set());
+    setIsSelectionMode(false);
+
+    const validMongoIds = idsToDelete.filter(id => id && !id.startsWith('usr_') && !id.startsWith('init_'));
+    if (validMongoIds.length > 0) {
+      await api.deleteChatMessages(validMongoIds);
+    }
+  };
+
+  const handleScrollToChat = (chat) => {
+    const targetId = chat.id || chat._id;
+    const el = document.getElementById(`msg-${targetId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setActiveHighlightId(targetId);
+      setTimeout(() => setActiveHighlightId(null), 2500);
+      if (mobileDrawerOpen) setMobileDrawerOpen(false);
+    } else {
+      handleSendMessage(chat.content);
+    }
   };
 
   const handleCopy = (id, content) => {
@@ -460,7 +652,7 @@ export default function WeatherChatbot() {
   // Group user chats dynamically into Today, Yesterday, This Week
   const recentUserChats = messages
     .filter(m => m.role === 'user' && m.content)
-    .slice(-12)
+    .slice(-15)
     .reverse();
 
   const categorizeChats = (chatList) => {
@@ -494,22 +686,78 @@ export default function WeatherChatbot() {
   const userInitial = user?.avatar || (user?.name ? user.name.charAt(0).toUpperCase() : 'U');
 
   // Render recent chat item
-  const renderChatItem = (chat, idx) => (
-    <button
-      key={chat.id || idx}
-      onClick={() => handleSendMessage(chat.content)}
-      className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80 flex items-center justify-between gap-2 transition-all cursor-pointer group mb-1"
-      title={chat.content}
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 shrink-0" />
-        <span className="truncate font-medium">{chat.content}</span>
+  const renderChatItem = (chat, idx) => {
+    const chatId = chat.id || chat._id;
+    const isSelected = selectedChatIds.has(chatId);
+
+    if (isSelectionMode) {
+      return (
+        <div
+          key={chatId || idx}
+          onClick={() => {
+            setSelectedChatIds(prev => {
+              const next = new Set(prev);
+              if (next.has(chatId)) {
+                next.delete(chatId);
+              } else {
+                next.add(chatId);
+              }
+              return next;
+            });
+          }}
+          className={`w-full text-left px-2.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2 transition-all cursor-pointer mb-1 border ${
+            isSelected
+              ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-100 font-medium'
+              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 border-transparent'
+          }`}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            {isSelected ? (
+              <CheckSquare className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            ) : (
+              <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            )}
+            <span className="truncate">{chat.content}</span>
+          </div>
+          <span className="text-[10px] text-slate-400 shrink-0">
+            {chat.timestamp || 'Just now'}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={chatId || idx}
+        className="w-full px-2.5 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80 flex items-center justify-between gap-2 transition-all cursor-pointer group mb-1"
+      >
+        <button
+          type="button"
+          onClick={() => handleScrollToChat(chat)}
+          className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
+          title={chat.content}
+        >
+          <MessageSquare className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 shrink-0" />
+          <span className="truncate font-medium">{chat.content}</span>
+        </button>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[10px] text-slate-400 group-hover:hidden">
+            {chat.timestamp || 'Just now'}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => handleDeleteSingleChat(e, chat)}
+            className="hidden group-hover:flex items-center justify-center p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+            title={localized.deleteChat}
+            aria-label={localized.deleteChat}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
-      <span className="text-[10px] text-slate-400 shrink-0">
-        {chat.timestamp || 'Just now'}
-      </span>
-    </button>
-  );
+    );
+  };
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col lg:flex-row h-[720px] max-h-[calc(100vh-170px)] transition-colors relative">
@@ -520,21 +768,64 @@ export default function WeatherChatbot() {
       <aside className="hidden lg:flex w-72 xl:w-80 border-r border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-4 flex-col justify-between shrink-0">
         <div className="flex flex-col min-h-0">
 
-          {/* + New Chat Button (Pill button matching wireframe) */}
-          <button
-            onClick={handleNewChat}
-            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs shadow-blue-500/25 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{localized.newChat}</span>
-          </button>
+          {/* Action Buttons: New Chat & Clear Chat */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleNewChat}
+              className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs shadow-blue-500/25 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="truncate">{localized.newChat}</span>
+            </button>
+
+            <button
+              onClick={() => setClearModalOpen(true)}
+              disabled={messages.length <= 1 && !hasAnyChats}
+              className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              title={localized.clearChat}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="truncate">{localized.clearChat}</span>
+            </button>
+          </div>
 
           {/* Recent Chats Section Header */}
-          <div className="mt-5 mb-2 flex items-center justify-between px-1">
+          <div className="mt-4 mb-2 flex items-center justify-between px-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {localized.recentChats}
             </span>
+            {hasAnyChats && (
+              <button
+                onClick={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  setSelectedChatIds(new Set());
+                }}
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
+                  isSelectionMode
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                }`}
+              >
+                {isSelectionMode ? localized.cancel : localized.selectChats}
+              </button>
+            )}
           </div>
+
+          {/* Batch Delete Action Bar when chats are selected */}
+          {isSelectionMode && selectedChatIds.size > 0 && (
+            <div className="flex items-center justify-between px-2.5 py-1.5 mb-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl animate-in fade-in">
+              <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300">
+                {selectedChatIds.size} {localized.selected}
+              </span>
+              <button
+                onClick={handleDeleteSelectedChats}
+                className="px-2 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>{localized.deleteSelected}</span>
+              </button>
+            </div>
+          )}
 
           {/* Grouped Dynamic Recent Chats (or empty state if no queries yet) */}
           <div className="space-y-2 overflow-y-auto max-h-[300px] scrollbar-thin pr-1">
@@ -620,30 +911,67 @@ export default function WeatherChatbot() {
                 </button>
               </div>
 
-              <button
-                onClick={handleNewChat}
-                className="w-full py-2 px-3 rounded-xl bg-blue-600 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{localized.newChat}</span>
-              </button>
-
-              <div className="mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {localized.recentChats}
+              {/* Action Buttons: New Chat & Clear Chat in mobile drawer */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={handleNewChat}
+                  className="py-2 px-2.5 rounded-xl bg-blue-600 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="truncate">{localized.newChat}</span>
+                </button>
+                <button
+                  onClick={() => setClearModalOpen(true)}
+                  disabled={messages.length <= 1 && !hasAnyChats}
+                  className="py-2 px-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="truncate">{localized.clearChat}</span>
+                </button>
               </div>
 
-              <div className="space-y-1 overflow-y-auto max-h-[260px] pr-1">
+              {/* Recent Chats Section Header in mobile drawer */}
+              <div className="mb-2 flex items-center justify-between px-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {localized.recentChats}
+                </span>
+                {hasAnyChats && (
+                  <button
+                    onClick={() => {
+                      setIsSelectionMode(!isSelectionMode);
+                      setSelectedChatIds(new Set());
+                    }}
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
+                      isSelectionMode
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    {isSelectionMode ? localized.cancel : localized.selectChats}
+                  </button>
+                )}
+              </div>
+
+              {/* Batch Delete Action Bar in mobile drawer */}
+              {isSelectionMode && selectedChatIds.size > 0 && (
+                <div className="flex items-center justify-between px-2.5 py-1.5 mb-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl">
+                  <span className="text-[11px] font-bold text-rose-700 dark:text-rose-300">
+                    {selectedChatIds.size} {localized.selected}
+                  </span>
+                  <button
+                    onClick={handleDeleteSelectedChats}
+                    className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>{localized.deleteSelected}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Mobile Drawer Recent Chats List */}
+              <div className="space-y-1 overflow-y-auto max-h-[240px] pr-1">
                 {hasAnyChats ? (
-                  recentUserChats.map((chat, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSendMessage(chat.content)}
-                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between gap-2"
-                    >
-                      <span className="truncate">{chat.content}</span>
-                      <span className="text-[10px] text-slate-400 shrink-0">{chat.timestamp}</span>
-                    </button>
-                  ))
+                  recentUserChats.map((chat, idx) => renderChatItem(chat, idx))
                 ) : (
                   <p className="text-xs text-slate-400 text-center py-4">{localized.noChatsYet}</p>
                 )}
@@ -674,7 +1002,36 @@ export default function WeatherChatbot() {
       {/* ========================================================================= */}
       <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900">
 
-        {/* Mobile Header Bar (Matches Mobile Wireframe mockup) */}
+        {/* Desktop Header Bar with Live Indicator, Clear Chat, and New Chat */}
+        <div className="hidden lg:flex items-center justify-between px-6 py-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">WeatherWise Assistant</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">• Powered by Google Gemini AI</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setClearModalOpen(true)}
+              disabled={messages.length <= 1 && !hasAnyChats}
+              className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+              title={localized.clearChat}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{localized.clearChat}</span>
+            </button>
+            <button
+              onClick={handleNewChat}
+              className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+              title={localized.newChat}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{localized.newChat}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Header Bar (Matches Mobile Wireframe mockup with Clear Chat) */}
         <div className="lg:hidden flex items-center justify-between p-2.5 px-3.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <button
@@ -686,30 +1043,60 @@ export default function WeatherChatbot() {
             </button>
             <div className="flex items-center gap-1.5">
               <Cloud className="w-4 h-4 text-blue-600 fill-blue-600" />
-              <span className="text-xs font-bold text-slate-900 dark:text-white">WeatherWise Assistant</span>
+              <span className="text-xs font-bold text-slate-900 dark:text-white">WeatherWise</span>
             </div>
           </div>
 
-          <button
-            onClick={handleNewChat}
-            className="p-1.5 px-2.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 font-semibold text-[11px] flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{localized.newButton || 'New'}</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setClearModalOpen(true)}
+              disabled={messages.length <= 1 && !hasAnyChats}
+              className="p-1.5 px-2.5 rounded-lg border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-semibold flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+              title={localized.clearChat}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{localized.clearChat}</span>
+            </button>
+            <button
+              onClick={handleNewChat}
+              className="p-1.5 px-2.5 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{localized.newButton || 'New'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Chat Transcript Area */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6 space-y-4 sm:space-y-5 scrollbar-thin">
+          {(hasAnyChats || messages.length > 1) && (
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
+              <span className="font-medium">Conversation</span>
+              <button
+                type="button"
+                onClick={() => setClearModalOpen(true)}
+                className="text-rose-600 dark:text-rose-400 hover:text-rose-700 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                title={localized.clearChat}
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>{localized.clearChat}</span>
+              </button>
+            </div>
+          )}
+
           {messages.map((msg, index) => {
             const isUser = msg.role === 'user';
             const isLiked = likedMap[msg.id] === 'up';
             const isDisliked = likedMap[msg.id] === 'down';
+            const isHighlighted = activeHighlightId === (msg.id || msg._id);
 
             return (
               <div
-                key={msg.id || index}
-                className={`flex gap-2.5 sm:gap-3.5 ${isUser ? 'justify-end' : 'justify-start'}`}
+                key={msg.id || msg._id || index}
+                id={`msg-${msg.id || msg._id || index}`}
+                className={`flex gap-2.5 sm:gap-3.5 transition-all duration-300 rounded-2xl group/msg ${
+                  isHighlighted ? 'ring-2 ring-blue-500/70 p-1.5 bg-blue-50/40 dark:bg-blue-950/30' : ''
+                } ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 {/* Assistant Avatar Badge: Blue outline ring with Cloud icon */}
                 {!isUser && (
@@ -787,11 +1174,23 @@ export default function WeatherChatbot() {
                     )}
                   </div>
 
-                  {/* Below Message Bubble: Timestamp & Action icons (thumbs up/down, copy) */}
-                  <div className={`flex items-center gap-3 px-1.5 ${isUser ? 'justify-end' : 'justify-between w-full'}`}>
+                  {/* Below Message Bubble: Timestamp & Action icons (thumbs up/down, copy, delete) */}
+                  <div className={`flex items-center gap-2.5 px-1.5 ${isUser ? 'justify-end' : 'justify-between w-full'}`}>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       {msg.timestamp || 'Just now'}
                     </span>
+
+                    {/* User Message Action: Delete this specific prompt */}
+                    {isUser && (
+                      <button
+                        onClick={(e) => handleDeleteSingleChat(e, msg)}
+                        className="opacity-0 group-hover/msg:opacity-100 p-0.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-opacity cursor-pointer"
+                        title={localized.deleteChat}
+                        aria-label={localized.deleteChat}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
 
                     {/* Bot Message Actions */}
                     {!isUser && (
@@ -858,6 +1257,19 @@ export default function WeatherChatbot() {
         {/* QUICK ACTION PILLS BAR (matches horizontal chips in wireframe)            */}
         {/* ========================================================================= */}
         <div className="px-3 sm:px-6 py-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-2 overflow-x-auto scrollbar-none bg-slate-50/40 dark:bg-slate-900/40">
+
+          {/* Clear Chat History Pill inside the chat action bar */}
+          {(hasAnyChats || messages.length > 1) && (
+            <button
+              type="button"
+              onClick={() => setClearModalOpen(true)}
+              className="px-3 py-1.5 rounded-full bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-xs font-semibold flex items-center gap-1.5 shrink-0 shadow-2xs transition-all cursor-pointer"
+              title={localized.clearChat}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{localized.clearChat}</span>
+            </button>
+          )}
 
           {/* Quick Action Category Chips */}
           {localized.quickActions.map((action, idx) => {
@@ -948,6 +1360,18 @@ export default function WeatherChatbot() {
               <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
 
+            {/* Clear Chat History Button inside Chat Box */}
+            <button
+              type="button"
+              onClick={() => setClearModalOpen(true)}
+              disabled={messages.length <= 1 && !hasAnyChats}
+              className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-full transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              title={localized.clearChat}
+              aria-label={localized.clearChat}
+            >
+              <Trash2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            </button>
+
             {/* Input Field */}
             <input
               type="text"
@@ -956,6 +1380,18 @@ export default function WeatherChatbot() {
               placeholder={localized.inputPlaceholder}
               className="flex-1 bg-transparent px-2 py-1 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
             />
+
+            {/* Clear input text (X) if user is typing */}
+            {input.trim() && (
+              <button
+                type="button"
+                onClick={() => setInput('')}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full transition-colors cursor-pointer"
+                title="Clear input"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             {/* Blue Circular Send Button with right arrow */}
             <button
@@ -975,6 +1411,52 @@ export default function WeatherChatbot() {
         </div>
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* CLEAR CHAT CONFIRMATION MODAL                                            */}
+      {/* ========================================================================= */}
+      {clearModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {localized.clearChatConfirmTitle}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  {localized.clearChatConfirmDesc}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setClearModalOpen(false)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                {localized.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={handleClearChat}
+                disabled={isClearing}
+                className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 active:scale-95 text-white flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {isClearing ? (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>{localized.confirm || 'Clear All'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -615,13 +615,48 @@ export const api = {
 
   async clearChatHistory() {
     try {
-      await fetch(`${API_BASE}/chat/history`, {
+      const res = await fetch(`${API_BASE}/chat/history`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
+      if (res.ok) {
+        return await res.json();
+      }
     } catch {
       // Error
     }
+    return { success: false };
+  },
+
+  async deleteChatMessage(id) {
+    try {
+      const res = await fetch(`${API_BASE}/chat/message/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Error
+    }
+    return { success: false };
+  },
+
+  async deleteChatMessages(messageIds) {
+    try {
+      const res = await fetch(`${API_BASE}/chat/delete-messages`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ messageIds })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Error
+    }
+    return { success: false };
   },
 
   async register({ name, email, password, confirmPassword }) {
