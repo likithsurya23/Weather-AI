@@ -130,6 +130,102 @@ function getLocalizedChatDefaults(language = 'English') {
       windLabel: "ಗಾಳಿ:"
     };
   }
+  if (l.includes('tamil') || l.includes('தமிழ்')) {
+    return {
+      greeting: "வணக்கம் {name}! 👋 நான் உங்கள் வெதர்வைஸ் AI உதவியாளர். நேரலை வானிலை, முன்னறிவிப்புகள் அல்லது பயன்பாட்டு அம்சங்களைப் பற்றி என்னிடம் கேளுங்கள்.",
+      clearText: "அரட்டை வரலாறு அழிக்கப்பட்டது. இன்று நான் உங்களுக்கு எவ்வாறு உதவ முடியும்?",
+      tryAskingTitle: "💡 இவற்றை கேட்டுப் பாருங்கள்...",
+      tryPrompts: [
+        "இந்த வார இறுதியில் மழை பெய்யுமா?",
+        "ஏதேனும் புயல் எச்சரிக்கை உள்ளதா?",
+        "வெள்ள பாதுகாப்பு குறிப்புகளை வழங்கவும்.",
+        "ஊட்டிக்கு செல்ல சிறந்த நேரம் எது?"
+      ],
+      quickActions: [
+        { label: "இன்றைய வானிலை", shortLabel: "இன்று", icon: CloudRain, query: "இன்றைய வானிலை முன்னறிவிப்பு என்ன?" },
+        { label: "பேரிடர் எச்சரிக்கைகள்", shortLabel: "எச்சரிக்கைகள்", icon: AlertTriangle, query: "ஏதேனும் இயற்கை பேரிடர் எச்சரிக்கைகள் உள்ளதா?" },
+        { label: "பாதுகாப்பு குறிப்புகள்", shortLabel: "பாதுகாப்பு", icon: ShieldCheck, query: "வானிலை பாதுகாப்பு வழிகாட்டுதல்களை வழங்கவும்." },
+        { label: "பயண ஆலோசனை", shortLabel: "பயணம்", icon: Plane, query: "பயணத்திற்கான வானிலை ஆலோசனை வழங்கவும்." }
+      ],
+      disclaimer: "வெதர்வைஸ் உதவியாளர் தவறுகள் செய்யலாம். முக்கியமான தகவல்களை சரிபார்க்கவும்.",
+      inputPlaceholder: "உங்கள் வானிலை கேள்வியை இங்கே தட்டச்சு செய்யவும்...",
+      recentChats: "சமீபத்திய உரையாடல்கள்",
+      newChat: "புதிய அரட்டை",
+      clearChat: "அரட்டையை அழி",
+      clearChatConfirmTitle: "அரட்டை வரலாற்றை அழிக்கவா?",
+      clearChatConfirmDesc: "இது இந்த உரையாடலில் உள்ள அனைத்து செய்திகளையும் நிரந்தரமாக நீக்கும். இந்த செயலை செயல்தவிர்க்க முடியாது.",
+      deleteChat: "நீக்கு",
+      deleteSelected: "தேர்ந்தெடுத்ததை நீக்கு",
+      selectChats: "தேர்ந்தெடு",
+      cancel: "ரத்து செய்",
+      confirm: "அனைத்தையும் அழி",
+      selected: "தேர்ந்தெடுக்கப்பட்டது",
+      today: "இன்று",
+      yesterday: "நேற்று",
+      thisWeek: "இந்த வாரம்",
+      noChatsYet: "முந்தைய உரையாடல்கள் எதுவும் இல்லை",
+      startAsking: "கீழே தட்டச்சு செய்து கேட்கத் தொடங்குங்கள்!",
+      loadingText: "வானிலை முன்னறிவிப்பை பகுப்பாய்வு செய்கிறது...",
+      connectionError: "இணைப்பதில் சிக்கல் உள்ளது. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.",
+      newButton: "புதிய",
+      quickInquiries: "விரைவு விசாரணைகள்",
+      myCurrentLocation: "எனது தற்போதைய இடம்",
+      severeWeatherAlerts: "கடுமையான வானிலை எச்சரிக்கைகள்",
+      rainUmbrellaAdvice: "மழை மற்றும் குடை ஆலோசனை",
+      highLabel: "அதிகபட்சம்:",
+      lowLabel: "குறைந்தபட்சம்:",
+      precipitationLabel: "மழைப்பொழிவு:",
+      windLabel: "காற்று:"
+    };
+  }
+  if (l.includes('korean') || l.includes('한국어')) {
+    return {
+      greeting: "안녕하세요 {name}님! 👋 WeatherWise AI 날씨 어시스턴트입니다. 실시간 날씨, 일기예보, 재난 경보 또는 안전 수칙에 대해 물어보세요.",
+      clearText: "대화 기록이 삭제되었습니다. 오늘 무엇을 도와드릴까요?",
+      tryAskingTitle: "💡 이런 질문을 해보세요...",
+      tryPrompts: [
+        "이번 주말에 비가 오나요?",
+        "태풍이나 폭풍 경보가 있나요?",
+        "홍수 대비 안전 수칙을 알려주세요.",
+        "여행하기에 가장 좋은 시기는 언제인가요?"
+      ],
+      quickActions: [
+        { label: "오늘의 일기예보", shortLabel: "오늘", icon: CloudRain, query: "오늘의 일기예보는 어때요?" },
+        { label: "재난 경보", shortLabel: "경보", icon: AlertTriangle, query: "자연재해 경보가 있나요?" },
+        { label: "안전 수칙", shortLabel: "안전 수칙", icon: ShieldCheck, query: "기상 안전 예방 조치를 알려주세요." },
+        { label: "여행 조언", shortLabel: "여행 조언", icon: Plane, query: "여행 날씨 조언을 알려주세요." }
+      ],
+      disclaimer: "WeatherWise 어시스턴트는 실수를 할 수 있습니다. 중요한 정보는 확인해 주세요.",
+      inputPlaceholder: "날씨에 관한 질문을 입력하세요...",
+      recentChats: "최근 대화",
+      newChat: "새 대화",
+      clearChat: "대화 지우기",
+      clearChatConfirmTitle: "대화 기록을 지우시겠습니까?",
+      clearChatConfirmDesc: "이 대화의 모든 메시지가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+      deleteChat: "삭제",
+      deleteSelected: "선택 항목 삭제",
+      selectChats: "선택",
+      cancel: "취소",
+      confirm: "모두 지우기",
+      selected: "개 선택됨",
+      today: "오늘",
+      yesterday: "어제",
+      thisWeek: "이번 주",
+      noChatsYet: "이전 대화가 없습니다",
+      startAsking: "아래에 입력하여 질문을 시작하세요!",
+      loadingText: "일기예보를 분석하는 중...",
+      connectionError: "현재 연결에 문제가 있습니다. 잠시 후 다시 시도해 주세요.",
+      newButton: "새로 만들기",
+      quickInquiries: "빠른 문의",
+      myCurrentLocation: "현재 내 위치",
+      severeWeatherAlerts: "기상 특보 및 경보",
+      rainUmbrellaAdvice: "비 & 우산 조언",
+      highLabel: "최고:",
+      lowLabel: "최저:",
+      precipitationLabel: "강수량:",
+      windLabel: "풍속:"
+    };
+  }
   if (l.includes('spanish') || l.includes('español')) {
     return {
       greeting: "¡Hola {name}! 👋 Soy tu asistente meteorológico de WeatherWise con tecnología Gemini. Pregúntame sobre el clima en vivo, pronósticos o alertas de desastre.",

@@ -444,7 +444,7 @@ export default function SettingsPage() {
                         onChange={() => handleToggleNotification('pushNotifications')}
                         className="rounded-sm border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-3 h-3"
                       />
-                      <span className="font-medium text-slate-600 dark:text-slate-400">Push</span>
+                      <span className="font-medium text-slate-600 dark:text-slate-400">{t('settings.push', 'Push')}</span>
                     </label>
 
                     {/* Email Notifications Toggle */}
@@ -455,7 +455,7 @@ export default function SettingsPage() {
                         onChange={() => handleToggleNotification('emailNotifications')}
                         className="rounded-sm border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-3 h-3"
                       />
-                      <span className="font-medium text-slate-600 dark:text-slate-400">Email</span>
+                      <span className="font-medium text-slate-600 dark:text-slate-400">{t('settings.emailNotif', 'Email')}</span>
                     </label>
                   </div>
                 </div>
@@ -489,6 +489,8 @@ export default function SettingsPage() {
                     <option value="English">English</option>
                     <option value="Hindi (हिन्दी)">Hindi (हिन्दी)</option>
                     <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                    <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                    <option value="Korean (한국어)">Korean (한국어)</option>
                     <option value="Spanish (Español)">Spanish (Español)</option>
                     <option value="French (Français)">French (Français)</option>
                     <option value="German (Deutsch)">German (Deutsch)</option>
@@ -539,22 +541,22 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('settings.deleteAccount', 'Delete Account')}?</h3>
-                  <p className="text-xs text-slate-500">This action is permanent and cannot be undone.</p>
+                  <p className="text-xs text-slate-500">{t('settings.deleteWarning', 'This action is permanent and cannot be undone.')}</p>
                 </div>
               </div>
 
               <div className="p-3 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl text-xs text-rose-700 dark:text-rose-300 space-y-1 border border-rose-100 dark:border-rose-900/30">
-                <p className="font-semibold">What will be removed:</p>
+                <p className="font-semibold">{t('settings.whatWillBeRemoved', 'What will be removed:')}</p>
                 <ul className="list-disc list-inside space-y-0.5 text-[11px] text-rose-600 dark:text-rose-400">
-                  <li>All saved and favorite location bookmarks</li>
-                  <li>Custom alert and notification preferences</li>
-                  <li>AI Chat consultation histories & cached data</li>
+                  <li>{t('settings.removedItem1', 'All saved and favorite location bookmarks')}</li>
+                  <li>{t('settings.removedItem2', 'Custom alert and notification preferences')}</li>
+                  <li>{t('settings.removedItem3', 'AI Chat consultation histories & cached data')}</li>
                 </ul>
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                  Type <span className="font-bold text-rose-600">DELETE</span> to confirm:
+                  {t('settings.typeDeleteConfirm', 'Type DELETE to confirm:')}
                 </label>
                 <input
                   type="text"

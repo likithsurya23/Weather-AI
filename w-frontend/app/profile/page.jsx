@@ -123,10 +123,10 @@ export default function ProfilePage() {
   const userInitial = user?.avatar || (user?.name ? user.name.charAt(0).toUpperCase() : 'L');
 
   const navLinks = [
-    { label: 'Favorites', desc: 'Saved locations & forecasts', icon: Heart, href: '/favorites' },
-    { label: 'AI Weather Chat', desc: 'Chat history & inquiries', icon: MessageSquare, href: '/chat' },
-    { label: 'Disaster Alerts', desc: 'Severe weather & hazard updates', icon: Bell, href: '/alerts' },
-    { label: 'Settings', desc: 'Units, language & preferences', icon: Sliders, href: '/settings' }
+    { label: t('profile.favorites', 'Favorites'), desc: t('profile.favoritesDesc', 'Saved locations & forecasts'), icon: Heart, href: '/favorites' },
+    { label: t('profile.chat', 'AI Weather Chat'), desc: t('profile.chatDesc', 'Chat history & inquiries'), icon: MessageSquare, href: '/chat' },
+    { label: t('profile.alerts', 'Disaster Alerts'), desc: t('profile.alertsDesc', 'Severe weather & hazard updates'), icon: Bell, href: '/alerts' },
+    { label: t('profile.settings', 'Settings'), desc: t('profile.settingsDesc', 'Units, language & preferences'), icon: Sliders, href: '/settings' }
   ];
 
   return (
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                    {t ? t('profile.title', 'My Profile') : 'My Profile'}
+                    {t('profile.title', 'My Profile')}
                   </h1>
                 </div>
               </div>
@@ -185,7 +185,7 @@ export default function ProfilePage() {
                             className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
                           >
                             {isUpdatingProfile ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                            <span>Save</span>
+                            <span>{t('profile.save', 'Save')}</span>
                           </button>
                           <button
                             type="button"
@@ -196,7 +196,7 @@ export default function ProfilePage() {
                             }}
                             className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 text-[11px] font-semibold cursor-pointer"
                           >
-                            Cancel
+                            {t('common.cancel', 'Cancel')}
                           </button>
                         </div>
                       </form>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
                     className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>Edit</span>
+                    <span>{t('profile.edit', 'Edit')}</span>
                   </button>
                 )}
 
@@ -269,7 +269,7 @@ export default function ProfilePage() {
             {/* Account & Security Section */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-xs space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                Account Security
+                {t('profile.accountSecurity', 'Account Security')}
               </h3>
 
               {/* Change Password Button */}
@@ -286,7 +286,7 @@ export default function ProfilePage() {
               >
                 <div className="flex items-center gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
                   <KeyRound className="w-4 h-4 text-slate-400" />
-                  <span>Change Password</span>
+                  <span>{t('profile.changePassword', 'Change Password')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </button>
@@ -298,7 +298,7 @@ export default function ProfilePage() {
               >
                 <div className="flex items-center gap-2.5 text-xs font-medium text-rose-600 dark:text-rose-400">
                   <Trash2 className="w-4 h-4" />
-                  <span>Delete Account</span>
+                  <span>{t('profile.deleteAccount', 'Delete Account')}</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-rose-400" />
               </button>
@@ -311,7 +311,7 @@ export default function ProfilePage() {
                 className="w-full py-2.5 sm:py-3 bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200/80 dark:border-slate-800 text-slate-700 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-400 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
+                <span>{t('profile.logout', 'Sign Out')}</span>
               </button>
             </div>
 
@@ -323,7 +323,7 @@ export default function ProfilePage() {
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 w-full max-w-sm border border-slate-200 dark:border-slate-800 shadow-xl">
               <div className="flex items-center justify-between mb-3.5">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Change Password</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('profile.changePassword', 'Change Password')}</h3>
                 <button
                   onClick={() => {
                     setShowPasswordModal(false);
@@ -351,7 +351,7 @@ export default function ProfilePage() {
               <form onSubmit={handlePasswordSubmit} className="space-y-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Current Password
+                    {t('profile.currentPassword', 'Current Password')}
                   </label>
                   <input
                     type="password"
@@ -364,7 +364,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    New Password
+                    {t('profile.newPassword', 'New Password')}
                   </label>
                   <input
                     type="password"
@@ -377,7 +377,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Confirm New Password
+                    {t('profile.confirmNewPassword', 'Confirm New Password')}
                   </label>
                   <input
                     type="password"
@@ -394,7 +394,7 @@ export default function ProfilePage() {
                     onClick={() => setShowPasswordModal(false)}
                     className="px-3 py-1.5 rounded-xl text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                   >
-                    Cancel
+                    {t('common.cancel', 'Cancel')}
                   </button>
                   <button
                     type="submit"
@@ -402,7 +402,7 @@ export default function ProfilePage() {
                     className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
                     {isChangingPassword && <Loader2 className="w-3 h-3 animate-spin" />}
-                    <span>Update Password</span>
+                    <span>{t('profile.changePassword', 'Update Password')}</span>
                   </button>
                 </div>
               </form>
@@ -418,10 +418,10 @@ export default function ProfilePage() {
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1">
-                Delete Account?
+                {t('profile.deleteAccount', 'Delete Account?')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-                This will permanently remove your account, saved favorite locations, and chat history from the database. This action cannot be undone.
+                {t('settings.deleteWarning', 'This action is permanent and cannot be undone.')}
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -430,7 +430,7 @@ export default function ProfilePage() {
                   onClick={() => setShowDeleteModal(false)}
                   className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
-                  Cancel
+                  {t('common.cancel', 'Cancel')}
                 </button>
                 <button
                   type="button"
@@ -439,7 +439,7 @@ export default function ProfilePage() {
                   className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                  <span>Yes, Delete</span>
+                  <span>{t('common.delete', 'Yes, Delete')}</span>
                 </button>
               </div>
             </div>

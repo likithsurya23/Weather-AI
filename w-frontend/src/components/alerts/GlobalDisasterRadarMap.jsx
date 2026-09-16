@@ -15,6 +15,7 @@ import {
   Sun,
   Radio
 } from 'lucide-react';
+import { useApp } from '../../Hooks/useAppContext';
 import { getDisasterCategory } from '../../lib/disasterClassifier';
 
 // Representative global coordinates for hazards
@@ -43,6 +44,7 @@ const DEFAULT_PINS = [
 ];
 
 export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle }) {
+  const { t } = useApp();
   const [activeFilter, setActiveFilter] = useState('all');
   const [hoveredPin, setHoveredPin] = useState(null);
 
@@ -139,11 +141,11 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
         <div className="flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
           <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-            Global Disaster Map
+            {t('alerts.globalDisasterMap', 'Global Disaster Map')}
           </h3>
           <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-[9px] font-bold border border-emerald-200 dark:border-emerald-800">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>LIVE</span>
+            <span>{t('common.live', 'LIVE')}</span>
           </span>
         </div>
 
@@ -151,7 +153,7 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
           href="/map"
           className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-0.5 transition-colors"
         >
-          <span>View Full Map</span>
+          <span>{t('alerts.viewFullMap', 'View Full Map')}</span>
           <ArrowRight className="w-2.5 h-2.5" />
         </Link>
       </div>
@@ -160,12 +162,12 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
       <div className="flex items-center justify-between gap-1 pt-2 pb-1.5 overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-1">
           {[
-            { id: 'all', label: 'All' },
-            { id: 'earthquake', label: 'Quakes' },
-            { id: 'cyclone', label: 'Storms' },
-            { id: 'flood', label: 'Floods' },
-            { id: 'wildfire', label: 'Fires' },
-            { id: 'drought', label: 'Drought' }
+            { id: 'all', label: t('alerts.filterAll', 'All') },
+            { id: 'earthquake', label: t('alerts.filterQuakes', 'Quakes') },
+            { id: 'cyclone', label: t('alerts.filterStorms', 'Storms') },
+            { id: 'flood', label: t('alerts.filterFloods', 'Floods') },
+            { id: 'wildfire', label: t('alerts.filterFires', 'Fires') },
+            { id: 'drought', label: t('alerts.filterDrought', 'Drought') }
           ].map((btn) => {
             const active = activeFilter === btn.id;
             return (
@@ -185,7 +187,7 @@ export default function GlobalDisasterRadarMap({ newsList = [], onSelectArticle 
         </div>
 
         <span className="text-[9px] font-mono text-slate-400 shrink-0">
-          {filteredPins.length} active
+          {t('alerts.activeCount', '{count} active', { count: filteredPins.length })}
         </span>
       </div>
 

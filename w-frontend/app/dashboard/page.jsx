@@ -38,7 +38,7 @@ import { findMatchingCities } from '../../src/lib/citiesData';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { weather, user, currentCity, toggleFavorite, isFavorite, temperatureUnit, t } = useApp();
+  const { weather, user, currentCity, toggleFavorite, isFavorite, temperatureUnit, t, language, translateCondition, formatLocalizedDate } = useApp();
 
   const [alerts, setAlerts] = useState([]);
   const [news, setNews] = useState([]);
@@ -84,12 +84,14 @@ export default function DashboardPage() {
 
   const displayName = user?.name ? user.name.split(' ')[0] : 'User';
 
-  const formattedDate = new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(new Date());
+  const formattedDate = formatLocalizedDate
+    ? formatLocalizedDate(new Date(), language, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+    : new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(new Date());
 
   // -------------------------------------------------------------
   // LIVE CURRENT WEATHER METRICS
@@ -98,6 +100,7 @@ export default function DashboardPage() {
   const country = weather?.country || 'India';
   const rawTemp = weather?.temp !== undefined ? Math.round(weather.temp) : 24;
   const condition = weather?.condition || 'Clear';
+  const translatedCondition = translateCondition ? translateCondition(condition, language) : condition;
   const rawFeelsLike = weather?.feelsLike !== undefined ? Math.round(weather.feelsLike) : rawTemp;
   const humidity = weather?.humidity !== undefined ? weather.humidity : 50;
   const windSpeed = weather?.windSpeed !== undefined ? weather.windSpeed : 10;
@@ -217,9 +220,9 @@ export default function DashboardPage() {
   // LIVE ALERTS DATA
   // -------------------------------------------------------------
   const alertItem = alerts && alerts.length > 0 ? alerts[0] : {
-    title: 'Meteorological Advisory',
-    description: `Current weather for ${city}: ${condition} at ${displayTemp}${unitSymbol}. No extreme weather advisories active.`,
-    time: 'Live Update'
+    title: t('dash.advisoryTitle', 'Meteorological Advisory'),
+    description: `Current weather for ${city}: ${translatedCondition} at ${displayTemp}${unitSymbol}. No extreme weather advisories active.`,
+    time: t('dash.liveAlert', 'Live Update')
   };
 
   // -------------------------------------------------------------
@@ -330,7 +333,7 @@ export default function DashboardPage() {
                   {getGreeting()}, {displayName}!
                 </h1>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
-                  Here&apos;s the latest live weather update for your location.
+                  {t('dash.weatherOverview', 'Here\'s the latest live weather update for your location.')}
                 </p>
               </div>
             </div>
@@ -365,7 +368,7 @@ export default function DashboardPage() {
                           {displayTemp}{unitSymbol}
                         </div>
                         <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
-                          {condition}
+                          {translatedCondition}
                         </div>
                         <div className="text-[10px] sm:text-[11px] text-slate-500 font-normal mt-0.5">
                           {t('dash.feelsLike', 'Feels like')} {displayFeelsLike}{unitSymbol}
@@ -430,7 +433,7 @@ export default function DashboardPage() {
 
                   <div className="grid grid-cols-5 gap-1 pt-3 sm:pt-4 pb-0.5 text-center items-center">
                     {forecastList.map((item, index) => {
-                      const dayName = item.day || 'Day';
+                      const dayName = (item.day || '').toLowerCase() === 'today' ? t('common.today', 'Today') : (item.day || 'Day');
                       const dateStr = item.date || `Day ${index + 1}`;
                       return (
                         <div key={index} className="flex flex-col items-center justify-between space-y-1 sm:space-y-1.5">
@@ -660,7 +663,7 @@ export default function DashboardPage() {
               {/* 7. Quick Actions Card */}
               <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-xs">
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 pb-2">
-                  {t('fav.addLocation', 'Quick Actions')}
+                  {t('dash.quickActions', 'Quick Actions')}
                 </h3>
 
                 <div className="space-y-1 pt-0.5">
@@ -670,7 +673,7 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center gap-2 sm:gap-2.5">
                       <MapPin className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
-                      <span className="text-xs font-semibold text-slate-800">{t('fav.addLocation', 'Add Location')}</span>
+                      <span className="text-xs font-semibold text-slate-800">{t('dash.addLocationModalTitle', 'Add Location')}</span>
                     </div>
                     <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition-colors" />
                   </button>
@@ -681,7 +684,7 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center gap-2 sm:gap-2.5">
                       <Bell className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
-                      <span className="text-xs font-semibold text-slate-800">{t('settings.notifications', 'Set Alerts')}</span>
+                      <span className="text-xs font-semibold text-slate-800">{t('dash.setAlerts', 'Set Alerts')}</span>
                     </div>
                     <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 transition-colors" />
                   </Link>
@@ -693,7 +696,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2 sm:gap-2.5">
                       <Bookmark className={`w-3.5 h-3.5 ${isCurrentFav ? 'text-blue-600 fill-blue-600' : 'text-slate-600 group-hover:text-blue-600'} transition-colors`} />
                       <span className="text-xs font-semibold text-slate-800">
-                        {savedSuccess ? t('dash.savedLocation', 'Location Saved!') : isCurrentFav ? t('dash.savedLocation', 'Saved in Favorites') : t('dash.saveLocation', 'Save This Location')}
+                        {savedSuccess ? t('dash.locationSaved', 'Location Saved!') : isCurrentFav ? t('dash.savedInFavorites', 'Saved in Favorites') : t('dash.saveThisLocation', 'Save This Location')}
                       </span>
                     </div>
                     {savedSuccess ? (
@@ -796,8 +799,8 @@ export default function DashboardPage() {
 
                   <div className="space-y-1.5 pt-2.5">
                     {[
-                      `Will it rain in ${city} today?`,
-                      'Any active storm or cyclone warnings nearby?'
+                      t('dash.willItRain', 'Will it rain in {city} today?', { city }),
+                      t('dash.cycloneNearby', 'Any active storm or cyclone warnings nearby?')
                     ].map((prompt, idx) => (
                       <button
                         key={idx}
@@ -840,8 +843,8 @@ export default function DashboardPage() {
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Add New Location</h3>
-                <p className="text-xs text-slate-400">Search for cities to pin on your favorites</p>
+                <h3 className="text-lg font-bold text-slate-900">{t('dash.addLocationModalTitle', 'Add New Location')}</h3>
+                <p className="text-xs text-slate-400">{t('dash.addLocationModalDesc', 'Search for cities to pin on your favorites')}</p>
               </div>
               <button
                 onClick={() => setIsAddLocationOpen(false)}
@@ -859,7 +862,7 @@ export default function DashboardPage() {
                     type="text"
                     value={searchQuery}
                     onChange={handleLocationSearchChange}
-                    placeholder="Enter city or region name..."
+                    placeholder={t('dash.searchCityPlaceholder', 'Enter city or region name...')}
                     className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-blue-500 font-medium"
                   />
                 </div>
@@ -868,7 +871,7 @@ export default function DashboardPage() {
                   disabled={searching}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition-all cursor-pointer"
                 >
-                  {searching ? 'Searching...' : 'Search'}
+                  {searching ? t('dash.searching', 'Searching...') : t('common.search', 'Search')}
                 </button>
               </form>
 
@@ -901,12 +904,12 @@ export default function DashboardPage() {
                           {isAdded ? (
                             <>
                               <Check className="w-3.5 h-3.5" />
-                              <span>Added</span>
+                              <span>{t('dash.added', 'Added')}</span>
                             </>
                           ) : (
                             <>
                               <Plus className="w-3.5 h-3.5" />
-                              <span>Add</span>
+                              <span>{t('dash.add', 'Add')}</span>
                             </>
                           )}
                         </button>
@@ -915,11 +918,11 @@ export default function DashboardPage() {
                   })
                 ) : searchQuery && !searching ? (
                   <div className="text-center py-6 text-xs text-slate-400">
-                    No matching locations found for &quot;{searchQuery}&quot;
+                    {t('dash.noMatchingLocations', 'No matching locations found for "{query}"', { query: searchQuery })}
                   </div>
                 ) : (
                   <div className="text-center py-6 text-xs text-slate-400">
-                    Type a city name (e.g. &quot;Paris&quot;, &quot;Tokyo&quot;, &quot;Sydney&quot;)
+                    {t('dash.typeCityPrompt', 'Type a city name (e.g. "Paris", "Tokyo", "Sydney")')}
                   </div>
                 )}
               </div>

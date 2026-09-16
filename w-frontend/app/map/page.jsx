@@ -33,7 +33,7 @@ export default function MapPage() {
             <div className="flex items-center gap-2">
               <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] sm:text-[11px] font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" />
-                <span>Live Satellite Radar</span>
+                <span>{t('map.satelliteRadar', 'Live Satellite Radar')}</span>
               </div>
             </div>
           </div>

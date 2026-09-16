@@ -43,7 +43,10 @@ function WeatherSearchContent() {
     syncDeviceLocation,
     isLiveLocation,
     isSyncingLocation,
-    t
+    t,
+    language,
+    translateCondition,
+    formatLocalizedDate
   } = useApp();
 
   const [liveAlerts, setLiveAlerts] = useState([]);
@@ -74,6 +77,7 @@ function WeatherSearchContent() {
   const country = weather?.country || 'India';
   const rawTemp = weather?.temp !== undefined ? Math.round(weather.temp) : 28;
   const condition = weather?.condition || 'Partly Cloudy';
+  const translatedCondition = translateCondition ? translateCondition(condition, language) : condition;
   const rawFeelsLike = weather?.feelsLike !== undefined ? Math.round(weather.feelsLike) : rawTemp;
   const humidity = weather?.humidity !== undefined ? weather.humidity : 51;
   const windSpeed = weather?.windSpeed !== undefined ? weather.windSpeed : 17;
@@ -87,8 +91,9 @@ function WeatherSearchContent() {
   const convertTemp = (celsius) => formatDegree(celsius, temperatureUnit);
 
   // Format the real local date/time of that location
-  const formattedDateTime = weather?.localtime
-    ? new Intl.DateTimeFormat('en-US', {
+  const dateObj = weather?.localtime ? new Date(weather.localtime.replace(' ', 'T')) : new Date();
+  const formattedDateTime = formatLocalizedDate
+    ? formatLocalizedDate(dateObj, language, {
         weekday: 'long',
         month: 'short',
         day: 'numeric',
@@ -96,7 +101,7 @@ function WeatherSearchContent() {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true
-      }).format(new Date(weather.localtime.replace(' ', 'T')))
+      })
     : new Intl.DateTimeFormat('en-US', {
         weekday: 'long',
         month: 'short',
@@ -105,7 +110,7 @@ function WeatherSearchContent() {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true
-      }).format(new Date());
+      }).format(dateObj);
 
   // -------------------------------------------------------------
   // REAL HOURLY FORECAST FROM WEATHERAPI
@@ -164,10 +169,43 @@ function WeatherSearchContent() {
   const aqiColor = aqiScore <= 50 ? '#10B981' : aqiScore <= 100 ? '#F59E0B' : '#EF4444';
 
 
-  const hasGovAlert = liveAlerts.some(a => a.severity === 'danger' || a.severity === 'warning');
-  const alertSummaryText = hasGovAlert
-    ? liveAlerts[0]?.title + ': ' + liveAlerts[0]?.description
-    : `No severe weather alerts for ${city} at this time.`;
+  const targetAlert = liveAlerts.find(a => a.severity === 'danger' || a.severity === 'warning') || liveAlerts[0];
+  const hasGovAlert = Boolean(targetAlert && (targetAlert.severity === 'danger' || targetAlert.severity === 'warning'));
+
+  let alertSummaryText = t('weather.safeConditions', 'Safe weather conditions observed across current atmospheric sensors.');
+
+  if (hasGovAlert && targetAlert) {
+    const isRainAlert = targetAlert.type === 'rain' || targetAlert.id === 'alt_rain' ||
+      (targetAlert.title && targetAlert.title.toLowerCase().includes('advisory') && targetAlert.description && targetAlert.description.toLowerCase().includes('precipitation'));
+    const isWindAlert = targetAlert.type === 'wind' || targetAlert.id === 'alt_wind' ||
+      (targetAlert.title && targetAlert.title.toLowerCase().includes('wind advisory'));
+
+    if (isRainAlert) {
+      const rawCondition = targetAlert.conditionText || targetAlert.title.replace(/\s*Advisory/i, '').trim() || weather?.condition || 'Rain';
+      const condTranslated = translateCondition(rawCondition, language);
+      const rainChanceVal = targetAlert.rainChance || (targetAlert.description?.match(/(\d+)%/)?.[1]) || '60';
+      const cityVal = targetAlert.cityName || city;
+      alertSummaryText = t('weather.rainAdvisoryBanner', '{condition} Advisory: {condition} with {rain}% precipitation probability observed in {city}.', {
+        condition: condTranslated,
+        rain: rainChanceVal,
+        city: cityVal
+      });
+    } else if (isWindAlert) {
+      const windVal = targetAlert.windKph || (targetAlert.description?.match(/(\d+)\s*km\/h/)?.[1]) || '20';
+      const dirVal = targetAlert.windDir || '';
+      const cityVal = targetAlert.cityName || city;
+      alertSummaryText = t('weather.windAdvisoryBanner', 'Wind Advisory: Surface wind speed recorded at {wind} km/h ({dir}) in {city}.', {
+        wind: windVal,
+        dir: dirVal,
+        city: cityVal
+      });
+    } else {
+      alertSummaryText = t('weather.generalAdvisoryBanner', '{title}: {description}', {
+        title: targetAlert.title,
+        description: targetAlert.description
+      });
+    }
+  }
 
   return (
     <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1400px] w-full mx-auto space-y-3 sm:space-y-4 pb-20 lg:pb-8">
@@ -191,11 +229,11 @@ function WeatherSearchContent() {
             type="button"
             onClick={() => syncDeviceLocation()}
             disabled={isSyncingLocation}
-            title="Detect and show weather for your current live location"
+            title={t('weather.locateMe', 'Locate Me')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-semibold shadow-xs shadow-blue-500/20 hover:shadow-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <LocateFixed className={`w-3.5 h-3.5 ${isSyncingLocation ? 'animate-spin' : ''}`} />
-            <span>{isSyncingLocation ? 'Locating...' : 'Locate Me'}</span>
+            <span>{isSyncingLocation ? t('weather.locating', 'Locating...') : t('weather.locateMe', 'Locate Me')}</span>
           </button>
 
           {/* Temperature Unit Switcher Pill */}
@@ -246,7 +284,7 @@ function WeatherSearchContent() {
                   {isLiveLocation ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200 shadow-xs">
                       <Navigation className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
-                      Live Device
+                      {t('weather.liveDevice', 'Live Device')}
                     </span>
                   ) : (
                     <button
@@ -254,10 +292,10 @@ function WeatherSearchContent() {
                       onClick={() => syncDeviceLocation()}
                       disabled={isSyncingLocation}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10px] font-medium transition-colors cursor-pointer disabled:opacity-50"
-                      title="Detect exact current location"
+                      title={t('weather.locateMe', 'Locate Me')}
                     >
                       <LocateFixed className={`w-3 h-3 ${isSyncingLocation ? 'animate-spin' : ''}`} />
-                      <span>{isSyncingLocation ? 'Locating...' : 'Locate Me'}</span>
+                      <span>{isSyncingLocation ? t('weather.locating', 'Locating...') : t('weather.locateMe', 'Locate Me')}</span>
                     </button>
                   )}
                 </div>
@@ -271,7 +309,7 @@ function WeatherSearchContent() {
                       {displayTemp}{unitSymbol}
                     </div>
                     <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
-                      {condition}
+                      {translatedCondition}
                     </div>
                     <div className="text-[10px] sm:text-[11px] text-slate-500 font-normal mt-0.5">
                       {t('dash.feelsLike', 'Feels like')} {displayFeelsLike}{unitSymbol}
@@ -330,7 +368,7 @@ function WeatherSearchContent() {
                   href="/dashboard"
                   className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
                 >
-                  <span>{t('dash.hourlyForecast', 'View 24h')}</span>
+                  <span>{t('weather.view24h', 'View 24h')}</span>
                   <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -365,7 +403,7 @@ function WeatherSearchContent() {
           <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
             <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
               <Info className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Weather Details</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{t('weather.weatherDetails', 'Weather Details')}</h3>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5 pt-3">
@@ -373,7 +411,7 @@ function WeatherSearchContent() {
               <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                 <Thermometer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <div>
-                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">Feels Like</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">{t('weather.feelsLike', 'Feels Like')}</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{displayFeelsLike}{unitSymbol}</span>
                 </div>
               </div>
@@ -382,7 +420,7 @@ function WeatherSearchContent() {
               <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                 <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                 <div>
-                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">Humidity</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">{t('weather.humidity', 'Humidity')}</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{humidity}%</span>
                 </div>
               </div>
@@ -391,7 +429,7 @@ function WeatherSearchContent() {
               <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                 <Wind className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <div>
-                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">Wind</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">{t('weather.wind', 'Wind')}</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{windSpeed} km/h</span>
                 </div>
               </div>
@@ -400,7 +438,7 @@ function WeatherSearchContent() {
               <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                 <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <div>
-                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">Pressure</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">{t('weather.pressure', 'Pressure')}</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{pressure} hPa</span>
                 </div>
               </div>
@@ -409,7 +447,7 @@ function WeatherSearchContent() {
               <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                 <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <div>
-                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">Visibility</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">{t('weather.visibility', 'Visibility')}</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{visibility} km</span>
                 </div>
               </div>
@@ -418,7 +456,7 @@ function WeatherSearchContent() {
               <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
                 <Cloud className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <div>
-                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">Cloud Cover</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-normal block leading-tight">{t('weather.cloudCover', 'Cloud Cover')}</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{cloudCover}%</span>
                 </div>
               </div>
@@ -437,13 +475,13 @@ function WeatherSearchContent() {
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-700" />
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900">5-Day Forecast</h3>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900">{t('weather.fiveDayForecast', '5-Day Forecast')}</h3>
               </div>
               <Link
                 href="/dashboard"
                 className="text-[10px] sm:text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <span>View More</span>
+                <span>{t('common.viewMore', 'View More')}</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -467,7 +505,7 @@ function WeatherSearchContent() {
                     {convertTemp(item.tempMax)} / {convertTemp(item.tempMin)}
                   </span>
                   <span className="text-[9px] sm:text-[10px] text-slate-500 font-normal text-right w-18 sm:w-20 truncate">
-                    {item.condition}
+                    {translateCondition ? translateCondition(item.condition, language) : item.condition}
                   </span>
                 </div>
               ))}
@@ -478,7 +516,7 @@ function WeatherSearchContent() {
           <div className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-xs">
             <div className="flex items-center gap-1.5 pb-2">
               <Sun className="w-3.5 h-3.5 text-amber-500" />
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Sun & Moon</h3>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">{t('weather.sunMoon', 'Sun & Moon')}</h3>
             </div>
 
             {/* Sun Arc Path Visual */}
@@ -497,11 +535,11 @@ function WeatherSearchContent() {
 
               <div className="w-full flex items-center justify-between text-[10px] font-medium text-slate-600 mt-0.5">
                 <div>
-                  <span className="text-slate-400 block text-[9px]">Sunrise</span>
+                  <span className="text-slate-400 block text-[9px]">{t('weather.sunrise', 'Sunrise')}</span>
                   <span className="font-bold text-slate-900">{sunrise}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-slate-400 block text-[9px]">Sunset</span>
+                  <span className="text-slate-400 block text-[9px]">{t('weather.sunset', 'Sunset')}</span>
                   <span className="font-bold text-slate-900">{sunset}</span>
                 </div>
               </div>
@@ -514,13 +552,13 @@ function WeatherSearchContent() {
                   <Moon className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-slate-300 text-slate-800" />
                 </div>
                 <div>
-                  <span className="text-[9px] text-slate-400 font-normal block leading-tight">Moon Phase</span>
+                  <span className="text-[9px] text-slate-400 font-normal block leading-tight">{t('weather.moonPhase', 'Moon Phase')}</span>
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-900">{moonPhase}</span>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-[9px] text-slate-400 font-normal block leading-tight">Illumination</span>
+                <span className="text-[9px] text-slate-400 font-normal block leading-tight">{t('weather.illumination', 'Illumination')}</span>
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-900">{moonIllumination}</span>
               </div>
             </div>
@@ -531,7 +569,7 @@ function WeatherSearchContent() {
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center gap-1.5">
                 <Leaf className="w-3.5 h-3.5 text-emerald-500" />
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900">Air Quality Index</h3>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900">{t('weather.airQualityIndex', 'Air Quality Index')}</h3>
               </div>
               <Info className="w-3.5 h-3.5 text-slate-400" />
             </div>
@@ -563,22 +601,22 @@ function WeatherSearchContent() {
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                   <span className="text-slate-600 font-medium w-12 sm:w-14">0 – 50</span>
-                  <span className="text-slate-800 font-semibold">Good</span>
+                  <span className="text-slate-800 font-semibold">{t('weather.aqiGood', 'Good')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                   <span className="text-slate-600 font-medium w-12 sm:w-14">51 – 100</span>
-                  <span className="text-slate-800 font-semibold">Moderate</span>
+                  <span className="text-slate-800 font-semibold">{t('weather.aqiModerate', 'Moderate')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
                   <span className="text-slate-600 font-medium w-12 sm:w-14">101 – 150</span>
-                  <span className="text-slate-800 font-semibold">Unhealthy</span>
+                  <span className="text-slate-800 font-semibold">{t('weather.aqiUnhealthy', 'Unhealthy')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
                   <span className="text-slate-600 font-medium w-12 sm:w-14">151 – 200</span>
-                  <span className="text-slate-800 font-semibold">Poor</span>
+                  <span className="text-slate-800 font-semibold">{t('weather.poor', 'Poor')}</span>
                 </div>
               </div>
             </div>
@@ -599,7 +637,7 @@ function WeatherSearchContent() {
               {alertSummaryText}
             </h4>
             <p className="text-[10px] sm:text-[11px] text-slate-500 font-normal">
-              We&apos;ll notify you if there are any upcoming severe weather conditions.
+              {t('dash.disasterMonitoring', 'We\'ll notify you if there are any upcoming severe weather conditions.')}
             </p>
           </div>
         </div>
@@ -609,7 +647,7 @@ function WeatherSearchContent() {
           className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-blue-600 border border-blue-200 rounded-lg sm:rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer self-start sm:self-auto shrink-0"
         >
           <Bell className="w-3 h-3" />
-          <span>Set Alerts</span>
+          <span>{t('dash.setAlerts', 'Set Alerts')}</span>
         </Link>
       </div>
 

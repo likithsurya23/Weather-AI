@@ -97,39 +97,39 @@ export default function AboutPage() {
   const links = [
     { 
       id: 'help', 
-      title: t ? t('about.helpCenter', 'Help Center') : 'Help Center', 
+      title: t('about.helpCenter', 'Help Center'), 
       icon: HelpCircle, 
-      badge: 'FAQs & Guides',
-      desc: 'User guides, meteorological metrics, and usage FAQs' 
+      badge: t('about.badgeHelp', 'FAQs & Guides'),
+      desc: t('about.descHelp', 'User guides, meteorological metrics, and usage FAQs') 
     },
     { 
       id: 'privacy', 
-      title: t ? t('about.privacyPolicy', 'Privacy Policy') : 'Privacy Policy', 
+      title: t('about.privacyPolicy', 'Privacy Policy'), 
       icon: ShieldCheck, 
-      badge: 'Encrypted',
-      desc: 'How your telemetry, search queries, and credentials are protected' 
+      badge: t('about.badgePrivacy', 'Encrypted'),
+      desc: t('about.descPrivacy', 'How your telemetry, search queries, and credentials are protected') 
     },
     { 
       id: 'terms', 
-      title: t ? t('about.termsOfService', 'Terms of Service') : 'Terms of Service', 
+      title: t('about.termsOfService', 'Terms of Service'), 
       icon: FileText, 
-      badge: 'v1.0.0',
-      desc: 'Licensing, allowable usage, and data attribution policies' 
+      badge: t('about.badgeTerms', 'v1.0.0'),
+      desc: t('about.descTerms', 'Licensing, allowable usage, and data attribution policies') 
     },
     { 
       id: 'contact', 
-      title: t ? t('about.contactSupport', 'Contact Support') : 'Contact Support', 
+      title: t('about.contactSupport', 'Contact Support'), 
       icon: Mail, 
-      badge: '24/7 Response',
-      desc: 'Direct channels for feedback, bug reports, and assistance' 
+      badge: t('about.badgeContact', '24/7 Response'),
+      desc: t('about.descContact', 'Direct channels for feedback, bug reports, and assistance') 
     }
   ];
 
   const highlights = [
-    { icon: Zap, label: 'Real-time Radar & Forecasts', desc: 'Hour-by-hour precision data' },
-    { icon: Bot, label: 'Gemini AI Intelligence', desc: 'Natural weather consultations' },
-    { icon: Shield, label: 'Severe Alert Broadcasts', desc: 'Critical disaster warnings' },
-    { icon: Layers, label: 'Localized Multi-language', desc: 'Native multi-lingual experience' }
+    { icon: Zap, label: t('about.feat1Title', 'Real-time Radar & Forecasts'), desc: t('about.feat1Desc', 'Hour-by-hour precision data') },
+    { icon: Bot, label: t('about.feat2Title', 'Gemini AI Intelligence'), desc: t('about.feat2Desc', 'Natural weather consultations') },
+    { icon: Shield, label: t('about.feat3Title', 'Severe Alert Broadcasts'), desc: t('about.feat3Desc', 'Critical disaster warnings') },
+    { icon: Layers, label: t('about.feat4Title', 'Localized Multi-language'), desc: t('about.feat4Desc', 'Native multi-lingual experience') }
   ];
 
   return (
@@ -151,7 +151,7 @@ export default function AboutPage() {
               </div>
               <div>
                 <h1 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-                  {t ? t('nav.about', 'About WeatherWise') : 'About WeatherWise'}
+                  {t('about.title', 'About WeatherWise')}
                 </h1>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function AboutPage() {
                   Weather<span className="text-blue-600 dark:text-blue-400">Wise</span>
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-                  Your intelligent atmospheric companion delivering hyper-local forecasts, conversational AI climate insights, and severe weather preparedness.
+                  {t('about.tagline', 'Your intelligent atmospheric companion delivering hyper-local forecasts, conversational AI climate insights, and severe weather preparedness.')}
                 </p>
               </div>
 
@@ -212,7 +212,7 @@ export default function AboutPage() {
           {/* Links Section (Help, Privacy, Terms, Contact) */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 px-1 uppercase tracking-wider">
-              Legal & Support Guides
+              {t('about.guidesTitle', 'Legal & Support Guides')}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
@@ -285,16 +285,16 @@ export default function AboutPage() {
                   {modalType === 'contact' && <Mail className="w-4 h-4" />}
                 </div>
                 <h3 id="about-modal-title" className="text-sm sm:text-base font-bold text-slate-900 dark:text-white capitalize">
-                  {modalType === 'help' && 'WeatherWise Help Center'}
-                  {modalType === 'privacy' && 'Privacy & Data Protection'}
-                  {modalType === 'terms' && 'Terms of Service & Attribution'}
-                  {modalType === 'contact' && 'Contact Support & Feedback'}
+                  {modalType === 'help' && t('about.modalHelpTitle', 'WeatherWise Help Center')}
+                  {modalType === 'privacy' && t('about.modalPrivacyTitle', 'Privacy & Data Protection')}
+                  {modalType === 'terms' && t('about.modalTermsTitle', 'Terms of Service & Attribution')}
+                  {modalType === 'contact' && t('about.modalContactTitle', 'Contact Support & Feedback')}
                 </h3>
               </div>
               <button 
                 type="button"
                 onClick={handleCloseModal}
-                aria-label="Close dialog"
+                aria-label={t('common.close', 'Close')}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -396,7 +396,7 @@ export default function AboutPage() {
                     className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-xs"
                   >
                     <Mail className="w-3.5 h-3.5" />
-                    <span>Send Support Email</span>
+                    <span>{t('about.sendSupportEmail', 'Send Support Email')}</span>
                   </a>
                 </div>
               )}
@@ -409,7 +409,7 @@ export default function AboutPage() {
                 onClick={handleCloseModal}
                 className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center"
               >
-                Close
+                {t('common.close', 'Close')}
               </button>
             </div>
           </div>

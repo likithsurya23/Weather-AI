@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api, getAuthToken, setAuthToken } from '../lib/api';
-import { getTranslation } from '../lib/translations';
+import { getTranslation, translateCondition, formatLocalizedDate } from '../lib/translations';
 
 const AppContext = createContext(null);
 
@@ -28,18 +28,20 @@ export function AppProvider({ children }) {
   const [deviceLocationName, setDeviceLocationName] = useState('');
 
   // Units & Formats
-  const [temperatureUnit, setTemperatureUnit] = useState('celsius'); // 'celsius' or 'fahrenheit'
-  const [windSpeedUnit, setWindSpeedUnit] = useState('km/h');
+  const [temperatureUnit, setTemperatureUnit] = useState('celsius');
+  const [windSpeedUnit, setWindSpeedUnit] = useState('kmh');
   const [pressureUnit, setPressureUnit] = useState('hPa');
-  const [dateFormat, setDateFormat] = useState('DD MMM YYYY');
-  const [timeFormat, setTimeFormat] = useState('12-hour (AM/PM)');
+  const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
+  const [timeFormat, setTimeFormat] = useState('12h');
 
   // Notifications
   const [notificationSettings, setNotificationSettings] = useState({
-    severeAlerts: true,
-    disasterNews: true,
-    dailySummary: false,
-    appUpdates: true
+    severeWeatherAlerts: true,
+    dailyForecast: true,
+    rainWarnings: true,
+    airQualityAlerts: true,
+    pushNotifications: true,
+    emailNotifications: true
   });
 
   // Appearance & Theme
@@ -56,10 +58,10 @@ export function AppProvider({ children }) {
   const [alerts, setAlerts] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Translation helper
+  // Translation helper with dynamic parameter interpolation
   const t = useCallback(
-    (key, fallback) => {
-      return getTranslation(language, key, fallback);
+    (key, fallback, params) => {
+      return getTranslation(language, key, fallback, params);
     },
     [language]
   );
@@ -453,6 +455,8 @@ export function AppProvider({ children }) {
         language,
         setLanguage,
         t,
+        translateCondition: (cond) => translateCondition(cond, language),
+        formatLocalizedDate: (d, opts) => formatLocalizedDate(d, language, opts),
         defaultLocation,
         setDefaultLocation,
         autoDetectLocation,

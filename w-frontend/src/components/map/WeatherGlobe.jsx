@@ -43,7 +43,7 @@ const CITY_AVATARS = {
 };
 
 export default function WeatherGlobe({ weatherStations = [], onSelectCity, isElaborated = false }) {
-  const { temperatureUnit, theme } = useApp();
+  const { temperatureUnit, theme, t } = useApp();
   const isDark = theme === 'dark';
   const [activeStation, setActiveStation] = useState(null);
 
@@ -114,7 +114,7 @@ export default function WeatherGlobe({ weatherStations = [], onSelectCity, isEla
         {/* Bottom Navigation & Interaction Hint */}
         <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] text-slate-400 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-slate-700/50 pointer-events-none flex items-center gap-1.5 shadow-md max-w-[90%] truncate">
           <Compass className="w-3 h-3 text-blue-400 shrink-0" />
-          <span className="truncate">Drag to rotate • Scroll to zoom • Click city</span>
+          <span className="truncate">{t('map.dragHint', 'Drag to rotate • Scroll to zoom • Click city')}</span>
         </div>
       </div>
     </div>

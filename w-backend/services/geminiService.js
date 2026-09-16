@@ -139,6 +139,12 @@ function normalizeLanguage(lang = 'English') {
   if (l.includes('kannada') || l.includes('ಕನ್ನಡ')) {
     return { name: 'Kannada', native: 'ಕನ್ನಡ', script: 'Kannada script (ಕನ್ನಡ)' };
   }
+  if (l.includes('tamil') || l.includes('தமிழ்')) {
+    return { name: 'Tamil', native: 'தமிழ்', script: 'Tamil script (தமிழ்)' };
+  }
+  if (l.includes('korean') || l.includes('한국어')) {
+    return { name: 'Korean', native: '한국어', script: 'Hangul script (한국어)' };
+  }
   if (l.includes('spanish') || l.includes('español')) {
     return { name: 'Spanish', native: 'Español', script: 'Spanish' };
   }

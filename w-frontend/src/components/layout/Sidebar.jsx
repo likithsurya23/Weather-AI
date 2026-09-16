@@ -100,11 +100,11 @@ export default function Sidebar() {
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
-              title="Logout"
+              title={t('nav.logout', 'Logout')}
               className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Logout</span>
+              <span>{t('nav.logout', 'Logout')}</span>
             </button>
           ) : (
             <Link
@@ -112,7 +112,7 @@ export default function Sidebar() {
               className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all"
             >
               <LogIn className="w-3.5 h-3.5" />
-              <span>Login</span>
+              <span>{t('nav.signIn', 'Login')}</span>
             </Link>
           )}
         </div>
@@ -162,7 +162,7 @@ export default function Sidebar() {
                   className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Logout</span>
+                  <span>{t('nav.logout', 'Logout')}</span>
                 </button>
               ) : (
                 <Link
@@ -171,7 +171,7 @@ export default function Sidebar() {
                   className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>Login</span>
+                  <span>{t('nav.signIn', 'Login')}</span>
                 </Link>
               )}
             </div>
@@ -184,11 +184,11 @@ export default function Sidebar() {
       {/* ------------------------------------------------------------- */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-1 px-2 flex items-center justify-around shadow-md">
         {[
-          { key: 'home', label: 'Home', href: '/dashboard', icon: Home },
-          { key: 'weather', label: 'Weather', href: '/search', icon: Cloud },
-          { key: 'map', label: 'Radar', href: '/map', icon: Compass },
-          { key: 'alerts', label: 'Alerts', href: '/alerts', icon: Newspaper },
-          { key: 'chat', label: 'AI Chat', href: '/chat', icon: Bot },
+          { key: 'home', label: t('nav.dashboard', 'Home'), href: '/dashboard', icon: Home },
+          { key: 'weather', label: t('nav.weather', 'Weather'), href: '/search', icon: Cloud },
+          { key: 'map', label: t('nav.map', 'Radar'), href: '/map', icon: Compass },
+          { key: 'alerts', label: t('nav.alerts', 'Alerts'), href: '/alerts', icon: Newspaper },
+          { key: 'chat', label: t('nav.chat', 'AI Chat'), href: '/chat', icon: Bot },
         ].map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
@@ -213,7 +213,7 @@ export default function Sidebar() {
           className="flex flex-col items-center gap-0.5 py-0.5 px-2 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-all cursor-pointer"
         >
           <Menu className="w-3.5 h-3.5" />
-          <span className="text-[9px] tracking-tight">More</span>
+          <span className="text-[9px] tracking-tight">{t('nav.more', 'More')}</span>
         </button>
       </nav>
     </>

@@ -199,7 +199,7 @@ export default function TopNavbar() {
                       setSelectedIndex(-1);
                       inputRef.current?.focus();
                     }}
-                    title="Clear search"
+                    title={t('topNav.clearSearch', 'Clear search')}
                     className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                   >
                     <X className="w-3 h-3" />
@@ -208,7 +208,7 @@ export default function TopNavbar() {
 
                 <button
                   type="submit"
-                  title="Search"
+                  title={t('topNav.search', 'Search')}
                   className="p-0.5 sm:p-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                 >
                   <Send className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -221,11 +221,11 @@ export default function TopNavbar() {
           {isDropdownOpen && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl z-50 overflow-hidden py-1 animate-in fade-in-50 duration-150">
               <div className="px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 mb-0.5">
-                <span>Possible Places ({suggestions.length})</span>
+                <span>{t('topNav.possiblePlaces', 'Possible Places')} ({suggestions.length})</span>
                 {isLoadingApi && (
                   <span className="flex items-center gap-1 text-blue-500">
                     <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                    <span>Live search...</span>
+                    <span>{t('topNav.liveSearch', 'Live search...')}</span>
                   </span>
                 )}
               </div>
@@ -264,7 +264,7 @@ export default function TopNavbar() {
                       </div>
 
                       <div className="flex items-center gap-1 pl-2 text-[10px] font-medium text-slate-400 dark:text-slate-500 shrink-0">
-                        <span className="hidden sm:inline">Select</span>
+                        <span className="hidden sm:inline">{t('topNav.select', 'Select')}</span>
                         <ArrowRight className="w-3 h-3 text-slate-400" />
                       </div>
                     </button>
@@ -280,10 +280,10 @@ export default function TopNavbar() {
               {isLoadingApi ? (
                 <div className="flex items-center justify-center gap-1.5 text-slate-400">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
-                  <span>Searching worldwide places...</span>
+                  <span>{t('topNav.searchingWorldwide', 'Searching worldwide places...')}</span>
                 </div>
               ) : (
-                <span>Press Enter to search weather for &quot;{searchInput}&quot;</span>
+                <span>{t('topNav.pressEnterToSearch', 'Press Enter to search weather for "{query}"', { query: searchInput })}</span>
               )}
             </div>
           )}
@@ -323,7 +323,7 @@ export default function TopNavbar() {
               className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <LogIn className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>Login</span>
+              <span>{t('nav.signIn', 'Login')}</span>
             </Link>
           )}
         </div>

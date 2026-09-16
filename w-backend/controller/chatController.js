@@ -73,6 +73,18 @@ exports.getChatHistory = async (req, res, next) => {
         "3ಡಿ ಹವಾಮಾನ ಗ್ಲೋಬ್ ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ?",
         "ನೈಸರ್ಗಿಕ ವಿಕೋಪಗಳ ಎಚ್ಚರಿಕೆಗಳನ್ನು ನೋಡುವುದು ಹೇಗೆ?"
       ];
+    } else if (langName === 'Tamil') {
+      initialSuggestions = [
+        "வெதர்வைஸ்-ல் என்னென்ன அம்சங்கள் உள்ளன?",
+        "3D வானிலை பூமி எப்படி செயல்படுகிறது?",
+        "இயற்கை பேரிடர் எச்சரிக்கைகளை எவ்வாறு பார்ப்பது?"
+      ];
+    } else if (langName === 'Korean') {
+      initialSuggestions = [
+        "웨더와이즈에는 어떤 기능들이 있나요?",
+        "3D 기상 지구본은 어떻게 작동하나요?",
+        "자연재해 경보는 어떻게 확인하나요?"
+      ];
     } else if (langName === 'Spanish') {
       initialSuggestions = [
         "¿Qué funciones están disponibles en WeatherWise?",

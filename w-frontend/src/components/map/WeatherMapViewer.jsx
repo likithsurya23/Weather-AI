@@ -351,17 +351,17 @@ export default function WeatherMapViewer() {
         <button
           onClick={toggleElaborate}
           className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-md sm:rounded-lg text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 transition-colors shadow-xs cursor-pointer ml-auto"
-          title={isElaborated ? 'Compact View' : 'Elaborate View'}
+          title={isElaborated ? t('map.compact', 'Compact View') : t('map.elaborate', 'Elaborate View')}
         >
           {isElaborated ? (
             <>
               <Minimize2 className="w-3 h-3 text-blue-500" />
-              <span>Compact</span>
+              <span>{t('map.compact', 'Compact')}</span>
             </>
           ) : (
             <>
               <Maximize2 className="w-3 h-3 text-blue-500" />
-              <span>Elaborate</span>
+              <span>{t('map.elaborate', 'Elaborate')}</span>
             </>
           )}
         </button>
@@ -398,14 +398,14 @@ export default function WeatherMapViewer() {
             <button
               onClick={() => setZoomLevel((prev) => Math.min(prev + 1, 18))}
               className="p-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-xs backdrop-blur-md transition-all cursor-pointer"
-              title="Zoom in"
+              title={t('map.zoomIn', 'Zoom in')}
             >
               <Plus className="w-3 h-3" />
             </button>
             <button
               onClick={() => setZoomLevel((prev) => Math.max(prev - 1, 2))}
               className="p-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-xs backdrop-blur-md transition-all cursor-pointer"
-              title="Zoom out"
+              title={t('map.zoomOut', 'Zoom out')}
             >
               <Minus className="w-3 h-3" />
             </button>
@@ -417,7 +417,7 @@ export default function WeatherMapViewer() {
                 setClickedLocation(null);
               }}
               className="p-1.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/80 shadow-xs backdrop-blur-md transition-all cursor-pointer"
-              title="Reset view"
+              title={t('map.resetView', 'Reset view')}
             >
               <Globe className="w-3 h-3" />
             </button>
@@ -427,7 +427,7 @@ export default function WeatherMapViewer() {
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-slate-800/80 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-slate-700/50 pointer-events-none max-w-[85%] truncate">
             <span className="text-[10px] text-slate-300 flex items-center gap-1 truncate">
               <MapPin className="w-2.5 h-2.5 shrink-0" />
-              <span className="truncate">Click map to inspect</span>
+              <span className="truncate">{t('map.clickToInspect', 'Click map to inspect')}</span>
             </span>
           </div>
 
@@ -450,9 +450,9 @@ export default function WeatherMapViewer() {
           {/* Gradient Legend (Minimized) */}
           <div className="absolute bottom-3 right-3 z-[1000] bg-slate-900/90 border border-slate-700/80 rounded-lg p-1.5 shadow-lg backdrop-blur-md flex flex-col gap-0.5 w-32 sm:w-40">
             <div className="flex items-center justify-between text-[9px] font-semibold text-slate-300">
-              <span>Low</span>
+              <span>{t('map.low', 'Low')}</span>
               <span className="capitalize font-bold text-white">{activeLayer}</span>
-              <span>High</span>
+              <span>{t('map.high', 'High')}</span>
             </div>
             <div className={`h-1.5 rounded-full bg-gradient-to-r ${getGradientLegend()} shadow-inner`} />
           </div>

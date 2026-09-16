@@ -343,6 +343,10 @@ export const api = {
         if (rainChance >= 40 || curr.precip_mm > 0.5) {
           alertsList.push({
             id: 'alt_rain',
+            type: 'rain',
+            conditionText: curr.condition?.text || 'Rain',
+            rainChance,
+            cityName: data.location?.name || city,
             title: `${curr.condition?.text || 'Rain'} Advisory`,
             location: `${data.location?.name}, ${data.location?.country}`,
             severity: 'warning',
@@ -354,6 +358,10 @@ export const api = {
         if (curr.wind_kph >= 15) {
           alertsList.push({
             id: 'alt_wind',
+            type: 'wind',
+            windKph: Math.round(curr.wind_kph),
+            windDir: curr.wind_dir,
+            cityName: data.location?.name || city,
             title: 'Active Wind Advisory',
             location: `${data.location?.name}, ${data.location?.country}`,
             severity: 'info',

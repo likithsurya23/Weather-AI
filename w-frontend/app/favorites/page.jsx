@@ -45,7 +45,7 @@ function generateLocationId(name) {
 
 export default function FavoritesPage() {
   const router = useRouter();
-  const { selectCity, temperatureUnit, t } = useApp();
+  const { selectCity, temperatureUnit, t, language, translateCondition } = useApp();
 
   const [activeTab, setActiveTab] = useState('All');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -443,18 +443,23 @@ export default function FavoritesPage() {
 
               {isSortOpen && (
                 <div className="absolute right-0 top-7 sm:top-9 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-30 py-1">
-                  {['Recently Added', 'Temperature: High to Low', 'Temperature: Low to High', 'Name: A-Z'].map((opt) => (
+                  {[
+                    { id: 'Recently Added', key: 'fav.sortByRecent', label: 'Recently Added' },
+                    { id: 'Temperature: High to Low', key: 'fav.sortByTempHigh', label: 'Temperature: High to Low' },
+                    { id: 'Temperature: Low to High', key: 'fav.sortByTempLow', label: 'Temperature: Low to High' },
+                    { id: 'Name: A-Z', key: 'fav.sortByName', label: 'Name: A-Z' }
+                  ].map((opt) => (
                     <button
-                      key={opt}
+                      key={opt.id}
                       onClick={() => {
-                        setSortBy(opt);
+                        setSortBy(opt.id);
                         setIsSortOpen(false);
                       }}
                       className={`w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer ${
-                        sortBy === opt ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-700 dark:text-slate-300'
+                        sortBy === opt.id ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      {opt}
+                      {t(opt.key, opt.label)}
                     </button>
                   ))}
                 </div>
@@ -510,7 +515,7 @@ export default function FavoritesPage() {
                         <div className="flex items-center gap-2.5 sm:gap-3">
                           <div>
                             <div className="text-[10px] sm:text-[11px] font-semibold text-slate-700">
-                              {loc.condition}
+                              {translateCondition ? translateCondition(loc.condition, language) : loc.condition}
                             </div>
                             <div className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight mt-0.5">
                               {convertTemp(loc.temp)}
@@ -541,14 +546,14 @@ export default function FavoritesPage() {
                                 onClick={() => handleCardClick(loc.city)}
                                 className="w-full text-left px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
                               >
-                                View Details
+                                {t('fav.viewDetails', 'View Details')}
                               </button>
                               <button
                                 onClick={(e) => handleRemoveLocation(loc.id, e)}
                                 className="w-full text-left px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-1 cursor-pointer"
                               >
                                 <Trash2 className="w-3 h-3" />
-                                <span>Remove</span>
+                                <span>{t('fav.remove', 'Remove')}</span>
                               </button>
                             </div>
                           )}
@@ -558,15 +563,15 @@ export default function FavoritesPage() {
                         <div className="space-y-0.5 text-[9px] sm:text-[10px] text-slate-600 w-full">
                           <div className="flex items-center gap-1">
                             <Thermometer className="w-2.5 h-2.5 text-slate-400" />
-                            <span>Feels {convertTemp(loc.feelsLike)}</span>
+                            <span>{t('dash.feelsLike', 'Feels')} {convertTemp(loc.feelsLike)}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Droplets className="w-2.5 h-2.5 text-blue-500" />
-                            <span>Humidity {loc.humidity}%</span>
+                            <span>{t('dash.humidity', 'Humidity')} {loc.humidity}%</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Wind className="w-2.5 h-2.5 text-slate-400" />
-                            <span>Wind {loc.windSpeed} km/h</span>
+                            <span>{t('dash.windSpeed', 'Wind')} {loc.windSpeed} km/h</span>
                           </div>
                           
                           {/* Status Alert */}
@@ -595,7 +600,7 @@ export default function FavoritesPage() {
                           onClick={() => handleCardClick(loc.city)}
                           className="w-full py-1 px-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
                         >
-                          <span>View Details</span>
+                          <span>{t('fav.viewDetails', 'View Details')}</span>
                           <ArrowRight className="w-2.5 h-2.5" />
                         </button>
                       </div>
@@ -611,12 +616,12 @@ export default function FavoritesPage() {
                   </div>
                   <div className="max-w-md space-y-1">
                     <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                      {activeTab === 'All' ? 'No Saved Locations Yet' : `No ${activeTab} Locations`}
+                      {activeTab === 'All' ? t('fav.noLocationsYet', 'No Saved Locations Yet') : t('fav.noLocationsForTag', 'No {tag} Locations', { tag: activeTab })}
                     </h3>
                     <p className="text-[11px] sm:text-xs text-slate-500 font-normal leading-relaxed">
                       {activeTab === 'All'
-                        ? 'Keep track of your favorite places and get quick weather updates by adding your home, work, or travel destinations.'
-                        : `You have not assigned any saved locations to the ${activeTab} category yet.`}
+                        ? t('fav.noSavedLocationsDesc', 'Keep track of your favorite places and get quick weather updates by adding your home, work, or travel destinations.')
+                        : t('fav.noCategoryLocationsDesc', 'You have not assigned any saved locations to this category yet.')}
                     </p>
                   </div>
                   <button
@@ -624,7 +629,7 @@ export default function FavoritesPage() {
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Add Location</span>
+                    <span>{t('fav.addLocation', 'Add Location')}</span>
                   </button>
                 </div>
               )}
@@ -639,10 +644,10 @@ export default function FavoritesPage() {
               <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center justify-between pb-1.5 sm:pb-2 border-b border-slate-100">
                   <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                    Locations on Map
+                    {t('fav.locationsOnMap', 'Locations on Map')}
                   </h3>
                   <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
-                    {locations.length} {locations.length === 1 ? 'place' : 'places'}
+                    {locations.length} {locations.length === 1 ? t('fav.place', 'place') : t('fav.places', 'places')}
                   </span>
                 </div>
 
@@ -695,7 +700,7 @@ export default function FavoritesPage() {
                     {locations.length === 0 && (
                       <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-xs flex items-center justify-center p-2.5 text-center">
                         <div className="bg-white/90 px-2 py-1 rounded-md shadow-xs border border-slate-200 text-[11px] text-slate-600 font-medium">
-                          No locations pinned yet
+                          {t('fav.noLocationsPinned', 'No locations pinned yet')}
                         </div>
                       </div>
                     )}
@@ -706,14 +711,14 @@ export default function FavoritesPage() {
                     <button
                       onClick={() => setMapZoomLevel((prev) => Math.min(prev + 0.15, 1.4))}
                       className="p-1 hover:bg-slate-50 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
-                      title="Zoom In"
+                      title={t('map.zoomIn', 'Zoom In')}
                     >
                       <Plus className="w-2.5 h-2.5" />
                     </button>
                     <button
                       onClick={() => setMapZoomLevel((prev) => Math.max(prev - 0.15, 0.8))}
                       className="p-1 hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer"
-                      title="Zoom Out"
+                      title={t('map.zoomOut', 'Zoom Out')}
                     >
                       <Minus className="w-2.5 h-2.5" />
                     </button>
@@ -735,7 +740,7 @@ export default function FavoritesPage() {
                   </div>
                 ) : (
                   <div className="text-[9px] sm:text-[10px] text-slate-400 text-center pt-1">
-                    Saved locations will be color-pinned here
+                    {t('fav.savedPinsColorNotice', 'Saved locations will be color-pinned here')}
                   </div>
                 )}
               </div>
@@ -743,7 +748,7 @@ export default function FavoritesPage() {
               {/* 2. Quick Actions Card */}
               <div className="bg-white rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-slate-200/80 shadow-xs">
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 pb-1.5 sm:pb-2">
-                  Quick Actions
+                  {t('fav.quickActions', 'Quick Actions')}
                 </h3>
 
                 <div className="space-y-1 pt-0.5">
@@ -753,7 +758,7 @@ export default function FavoritesPage() {
                   >
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3 h-3 text-slate-600 group-hover:text-blue-600 transition-colors" />
-                      <span className="text-[11px] font-semibold text-slate-800">Add New Location</span>
+                      <span className="text-[11px] font-semibold text-slate-800">{t('fav.addLocation', 'Add New Location')}</span>
                     </div>
                     <Plus className="w-3 h-3 text-slate-400 group-hover:text-slate-800 transition-colors" />
                   </button>
@@ -764,7 +769,7 @@ export default function FavoritesPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Bell className="w-3 h-3 text-slate-600 group-hover:text-blue-600 transition-colors" />
-                      <span className="text-[11px] font-semibold text-slate-800">Set Alerts for Locations</span>
+                      <span className="text-[11px] font-semibold text-slate-800">{t('settings.severeAlerts', 'Set Alerts for Locations')}</span>
                     </div>
                     <Plus className="w-3 h-3 text-slate-400 group-hover:text-slate-800 transition-colors" />
                   </Link>
@@ -776,7 +781,7 @@ export default function FavoritesPage() {
                     <div className="flex items-center gap-2">
                       <RefreshCw className={`w-3 h-3 ${syncFeedback ? 'text-emerald-600 animate-spin' : 'text-slate-600 group-hover:text-blue-600'} transition-colors`} />
                       <span className="text-[11px] font-semibold text-slate-800">
-                        {syncFeedback ? 'Locations Synced!' : 'Sync Across Devices'}
+                        {syncFeedback ? t('fav.syncedSuccess', 'Locations Synced!') : t('fav.sync', 'Sync Across Devices')}
                       </span>
                     </div>
                     {syncFeedback ? (
@@ -794,25 +799,25 @@ export default function FavoritesPage() {
                   <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
                     <Lightbulb className="w-3 h-3" />
                   </div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900">Tips</h3>
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900">{t('fav.tips', 'Tips')}</h3>
                 </div>
 
                 <ul className="space-y-1 text-[10px] sm:text-[11px] text-slate-500 leading-relaxed font-normal">
                   <li className="flex items-start gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-slate-400 mt-1 shrink-0" />
-                    <span>Save multiple locations to track weather easily.</span>
+                    <span>{t('fav.tip1', 'Save multiple locations to track weather easily.')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-slate-400 mt-1 shrink-0" />
-                    <span>Get notified about severe weather alerts.</span>
+                    <span>{t('fav.tip2', 'Get notified about severe weather alerts.')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-slate-400 mt-1 shrink-0" />
-                    <span>Organize locations with custom labels (Home, Work, etc.).</span>
+                    <span>{t('fav.tip3', 'Organize locations with custom labels (Home, Work, etc.).')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-slate-400 mt-1 shrink-0" />
-                    <span>Access your saved locations on any device.</span>
+                    <span>{t('fav.tip4', 'Access your saved locations on any device.')}</span>
                   </li>
                 </ul>
               </div>
@@ -830,11 +835,11 @@ export default function FavoritesPage() {
                 <Bookmark className="w-3.5 h-3.5 fill-white stroke-none" />
               </div>
               <span className="font-bold text-slate-800">WeatherWise</span>
-              <span className="text-slate-400 pl-2">© 2026 WeatherWise. All rights reserved.</span>
+              <span className="text-slate-400 pl-2">{t('landing.copyright', '© 2026 WeatherWise. All rights reserved.')}</span>
             </div>
 
             <div className="text-slate-500 font-medium">
-              Built for a safer, greener tomorrow.
+              {t('nav.tagline', 'A safer, greener tomorrow.').replace('\n', ' ')}
             </div>
           </div>
         </footer>
@@ -846,8 +851,8 @@ export default function FavoritesPage() {
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Add New Location</h3>
-                <p className="text-xs text-slate-400">Search for cities and select a category tag</p>
+                <h3 className="text-lg font-bold text-slate-900">{t('fav.modalTitle', 'Add New Location Bookmark')}</h3>
+                <p className="text-xs text-slate-400">{t('fav.modalDesc', 'Search for any global city to pin to your saved weather book.')}</p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -860,21 +865,21 @@ export default function FavoritesPage() {
             <div className="p-6 space-y-4">
               {/* Category Tag Picker */}
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-2">Category Label:</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-2">{t('fav.tagLabel', 'Location Tag')}:</label>
                 <div className="flex items-center gap-2">
                   {[
-                    { id: 'Home', icon: Home },
-                    { id: 'Work', icon: Briefcase },
-                    { id: 'Travel', icon: Plane },
-                    { id: 'Other', icon: Bookmark }
-                  ].map((t) => {
-                    const Icon = t.icon;
-                    const isSelected = selectedTag === t.id;
+                    { id: 'Home', key: 'fav.home', icon: Home },
+                    { id: 'Work', key: 'fav.work', icon: Briefcase },
+                    { id: 'Travel', key: 'fav.travel', icon: Plane },
+                    { id: 'Other', key: 'fav.other', icon: Bookmark }
+                  ].map((tItem) => {
+                    const Icon = tItem.icon;
+                    const isSelected = selectedTag === tItem.id;
                     return (
                       <button
-                        key={t.id}
+                        key={tItem.id}
                         type="button"
-                        onClick={() => setSelectedTag(t.id)}
+                        onClick={() => setSelectedTag(tItem.id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-blue-600 text-white shadow-xs'
@@ -882,7 +887,7 @@ export default function FavoritesPage() {
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
-                        <span>{t.id}</span>
+                        <span>{t(tItem.key, tItem.id)}</span>
                       </button>
                     );
                   })}
@@ -896,7 +901,7 @@ export default function FavoritesPage() {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  placeholder="Enter city or region name (e.g. Bengaluru, London, Tokyo)..."
+                  placeholder={t('fav.searchPlaceholder', 'Enter city or region name (e.g. Bengaluru, London, Tokyo)...')}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-blue-500 font-medium"
                 />
               </div>
@@ -905,7 +910,7 @@ export default function FavoritesPage() {
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {searching ? (
                   <div className="text-center py-6 text-xs text-slate-400 animate-pulse">
-                    Searching global locations...
+                    {t('common.loading', 'Searching global locations...')}
                   </div>
                 ) : searchResults.length > 0 ? (
                   searchResults.map((item, idx) => (
@@ -928,17 +933,17 @@ export default function FavoritesPage() {
                         className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-all cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Add as {selectedTag}</span>
+                        <span>{t('fav.addLocation', 'Add Location')}</span>
                       </button>
                     </div>
                   ))
                 ) : searchQuery.length >= 2 ? (
                   <div className="text-center py-6 text-xs text-slate-400">
-                    No matching locations found for &quot;{searchQuery}&quot;
+                    {t('dash.noMatchingLocations', 'No matching locations found for "{query}"', { query: searchQuery })}
                   </div>
                 ) : (
                   <div className="text-center py-6 text-xs text-slate-400">
-                    Type a city name (e.g. &quot;Hyderabad&quot;, &quot;London&quot;, &quot;Tokyo&quot;, &quot;Sydney&quot;)
+                    {t('dash.typeCityPrompt', 'Type a city name (e.g. "Hyderabad", "London", "Tokyo", "Sydney")')}
                   </div>
                 )}
               </div>
