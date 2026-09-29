@@ -3525,7 +3525,7 @@ export const translations = {
     'nav.getStarted': '今すぐ始める',
     'nav.dashboard': 'ダッシュボード',
     'nav.map': 'レーダーマップ',
-    'nav.weather': '天気予报',
+    'nav.weather': '天気予報',
     'nav.alerts': '災害ニュース',
     'nav.chat': 'AIアシスタント',
     'nav.favorites': '保存した場所',
