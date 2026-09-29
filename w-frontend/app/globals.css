@@ -63,3 +63,37 @@ body {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+/* Weather AI Loader Keyframes */
+@keyframes popSwap {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.65);
+  }
+  12%, 88% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.65);
+  }
+}
+
+@keyframes swap {
+  0%        { opacity: 0; transform: translateY(14px) scale(0.7); }
+  3%, 22%   { opacity: 1; transform: translateY(0) scale(1); }
+  25%, 100% { opacity: 0; transform: translateY(-14px) scale(0.7); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+
+@keyframes slide {
+  0%   { left: -50%; }
+  100% { left: 100%; }
+}
+
+

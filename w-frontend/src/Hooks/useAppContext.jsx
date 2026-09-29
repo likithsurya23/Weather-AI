@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api, getAuthToken, setAuthToken } from '../lib/api';
 import { getTranslation, translateCondition, formatLocalizedDate } from '../lib/translations';
+import Loader from '../components/ui/Loader';
 
 const AppContext = createContext(null);
 
@@ -12,6 +13,16 @@ export function AppProvider({ children }) {
   // Authentication State
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  // Application initial loading animation state (8.0s to complete full 2.0s cycle of all 4 weather icons)
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Location & Weather state
   const [currentCity, setCurrentCity] = useState('Mysore');
@@ -473,10 +484,11 @@ export function AppProvider({ children }) {
         notificationSettings,
         setNotificationSettings,
         mobileMenuOpen,
-        setMobileMenuOpen
+        setMobileMenuOpen,
+        initialLoading
       }}
     >
-      {children}
+      {initialLoading ? <Loader /> : children}
     </AppContext.Provider>
   );
 }
