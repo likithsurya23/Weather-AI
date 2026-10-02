@@ -35,6 +35,7 @@ import { api } from '../../src/lib/api';
 import { formatDegree, formatTemp, formatTempNumber } from '../../src/lib/weatherUtils';
 import ProtectedRoute from '../../src/components/auth/ProtectedRoute';
 import { findMatchingCities } from '../../src/lib/citiesData';
+import { getIncidentCoverImage } from '../../src/lib/disasterClassifier';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -314,10 +315,10 @@ export default function DashboardPage() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
         <TopNavbar />
 
-        <main className="flex-1 p-2.5 sm:p-4 lg:p-5 max-w-[1400px] w-full mx-auto space-y-3 sm:space-y-4 pb-20 lg:pb-8">
+        <main className="flex-1 w-full px-2.5 sm:px-4 lg:px-6 py-2 sm:py-3 space-y-3 sm:space-y-4 pb-20 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Top Greeting Header Card (Small & Compact) */}
           <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-2.5 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors">
             <div className="flex items-center gap-2.5 sm:gap-3">
@@ -741,20 +742,21 @@ export default function DashboardPage() {
                       >
                         {/* News Thumbnail Image */}
                         <div className="w-10 h-8 sm:w-12 sm:h-10 rounded-md sm:rounded-lg bg-slate-100 border border-slate-200/80 overflow-hidden shrink-0 flex items-center justify-center">
-                          {item.imageUrl ? (
-                            <Image
-                              src={item.imageUrl}
-                              alt={item.title || 'News thumbnail'}
-                              width={48}
-                              height={40}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 text-[9px] sm:text-[10px] font-bold">
-                              {item.category?.slice(0, 3).toUpperCase() || 'NEWS'}
-                            </div>
-                          )}
+                          <Image
+                            src={
+                              (!item.imageUrl || item.imageUrl.includes('1589824783837-6169889fa20f'))
+                                ? getIncidentCoverImage(item)
+                                : item.imageUrl
+                            }
+                            alt={item.title || 'News thumbnail'}
+                            width={48}
+                            height={40}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            unoptimized
+                            onError={(e) => {
+                              e.currentTarget.src = getIncidentCoverImage(item);
+                            }}
+                          />
                         </div>
 
                         {/* Headline and time */}

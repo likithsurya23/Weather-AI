@@ -68,6 +68,25 @@ export function AppProvider({ children }) {
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [alerts, setAlerts] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('weatherwise_sidebar_collapsed');
+        if (saved !== null) return JSON.parse(saved);
+      } catch {}
+    }
+    return false;
+  });
+
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('weatherwise_sidebar_collapsed', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
 
   // Translation helper with dynamic parameter interpolation
   const t = useCallback(
@@ -485,6 +504,9 @@ export function AppProvider({ children }) {
         setNotificationSettings,
         mobileMenuOpen,
         setMobileMenuOpen,
+        sidebarCollapsed,
+        setSidebarCollapsed,
+        toggleSidebarCollapsed,
         initialLoading
       }}
     >

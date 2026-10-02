@@ -3,7 +3,7 @@ let cacheTime = 0;
 const CACHE = 60 * 1000;
 
 const IMAGES = {
-  earthquake: "https://images.unsplash.com/photo-1589824783837-6169889fa20f?w=800&q=80",
+  earthquake: "/disasters/earthquake.jpg",
   flood: "https://images.unsplash.com/photo-1514632595-4944383f2737?w=800&q=80",
   cyclone: "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80",
   hurricane: "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=800&q=80",

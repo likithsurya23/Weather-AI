@@ -134,10 +134,10 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-transparent flex transition-colors">
         <Sidebar />
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
           <TopNavbar />
 
-          <main className="flex-1 p-2.5 sm:p-4 lg:p-5 max-w-2xl w-full mx-auto space-y-3 sm:space-y-4 pb-20 lg:pb-10">
+          <main className="flex-1 w-full px-2.5 sm:px-4 lg:px-6 py-2 sm:py-3 space-y-3 sm:space-y-4 pb-20 lg:pb-10 transition-all duration-300 ease-in-out">
 
             {/* Top Header Card (Matching all other pages) */}
             <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-2.5 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition-colors">

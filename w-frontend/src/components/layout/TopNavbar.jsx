@@ -149,7 +149,7 @@ export default function TopNavbar() {
   const placeholderText = t ? t('nav.searchPlaceholder', 'Search for a city...') : 'Search for a city...';
 
   return (
-    <div className="w-full px-2.5 sm:px-4 lg:px-6 pt-1.5 sm:pt-2.5 z-30 sticky top-0">
+    <div className="w-full px-2.5 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4 z-30 sticky top-0 transition-all duration-300 ease-in-out">
       <header className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between transition-colors">
 
         {/* Mobile Hamburger Toggle Button (Hidden on lg screens) */}
